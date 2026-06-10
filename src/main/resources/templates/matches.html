@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Matches')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<main class="container">
+    <div th:replace="~{fragments :: flash}"></div>
+
+    <div class="page-header">
+        <div>
+            <h1>Matches</h1>
+            <div class="muted" th:if="${selectedTournament}" th:text="|${selectedTournament.name} ${selectedTournament.season}|"></div>
+        </div>
+        <form th:if="${!#lists.isEmpty(tournaments)}" th:action="@{/matches}" method="get">
+            <select name="tournamentId" onchange="this.form.submit()">
+                <option th:each="tournament : ${tournaments}"
+                        th:value="${tournament.id}"
+                        th:selected="${selectedTournament != null and selectedTournament.id == tournament.id}"
+                        th:text="|${tournament.name} ${tournament.season}|"></option>
+            </select>
+        </form>
+    </div>
+
+    <div th:if="${#lists.isEmpty(tournaments)}" class="surface">
+        No tournaments yet.
+    </div>
+
+    <table th:if="${selectedTournament != null}">
+        <thead>
+        <tr>
+            <th>No</th>
+            <th>Kickoff</th>
+            <th>Stage</th>
+            <th>Match</th>
+            <th>Result</th>
+            <th>Prediction</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="match : ${matches}"
+            th:with="prediction=${predictionsByMatchId[match.id]}, editable=${editableByMatchId[match.id]}">
+            <td th:text="${match.matchNo}"></td>
+            <td class="nowrap" th:text="${#temporals.format(match.kickoffAt, 'yyyy-MM-dd HH:mm')}"></td>
+            <td>
+                <span th:text="${match.stage}"></span>
+                <span th:if="${match.groupCode}" th:text="| / ${match.groupCode}|"></span>
+            </td>
+            <td>
+                <span th:text="${match.homeTeam != null ? match.homeTeam.name : (match.placeholderHome != null ? match.placeholderHome : 'TBD')}"></span>
+                <span> vs </span>
+                <span th:text="${match.awayTeam != null ? match.awayTeam.name : (match.placeholderAway != null ? match.placeholderAway : 'TBD')}"></span>
+            </td>
+            <td>
+                <span th:if="${match.homeScore != null and match.awayScore != null}" th:text="|${match.homeScore} - ${match.awayScore}|"></span>
+                <span th:unless="${match.homeScore != null and match.awayScore != null}" class="muted">Pending</span>
+            </td>
+            <td>
+                <form class="actions" th:action="@{/matches/{id}/predictions(id=${match.id})}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="tournamentId" th:value="${selectedTournament.id}">
+                    <input class="score-input" type="number" min="0" name="predictedHomeScore"
+                           th:value="${prediction != null ? prediction.predictedHomeScore : ''}"
+                           th:disabled="${!editable}" required>
+                    <input class="score-input" type="number" min="0" name="predictedAwayScore"
+                           th:value="${prediction != null ? prediction.predictedAwayScore : ''}"
+                           th:disabled="${!editable}" required>
+                    <button type="submit" th:disabled="${!editable}">Save</button>
+                    <span th:if="${!editable}" class="muted">Locked</span>
+                </form>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(matches)}">
+            <td colspan="6">No matches yet.</td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

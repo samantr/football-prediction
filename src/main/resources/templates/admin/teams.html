@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Admin Teams')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<main class="container">
+    <div th:replace="~{fragments :: flash}"></div>
+
+    <div class="page-header">
+        <h1>Teams</h1>
+        <form th:if="${!#lists.isEmpty(tournaments)}" th:action="@{/admin/teams}" method="get">
+            <select name="tournamentId" onchange="this.form.submit()">
+                <option th:each="tournament : ${tournaments}"
+                        th:value="${tournament.id}"
+                        th:selected="${selectedTournament != null and selectedTournament.id == tournament.id}"
+                        th:text="|${tournament.name} ${tournament.season}|"></option>
+            </select>
+        </form>
+    </div>
+
+    <div th:if="${selectedTournament == null}" class="surface">
+        Create a tournament first.
+    </div>
+
+    <section th:if="${selectedTournament != null}" class="surface">
+        <h2 th:text="${editTeam.id == null ? 'Create team' : 'Edit team'}"></h2>
+        <form th:action="@{/admin/teams}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="id" th:value="${editTeam.id}">
+            <input type="hidden" name="tournamentId" th:value="${selectedTournament.id}">
+            <div class="form-grid">
+                <p>
+                    <label for="name">Name</label>
+                    <input id="name" name="name" th:value="${editTeam.name}" required>
+                </p>
+                <p>
+                    <label for="code">Code</label>
+                    <input id="code" name="code" th:value="${editTeam.code}" required>
+                </p>
+                <p>
+                    <label for="groupCode">Group</label>
+                    <input id="groupCode" name="groupCode" th:value="${editTeam.groupCode}">
+                </p>
+            </div>
+            <button type="submit">Save</button>
+            <a th:if="${editTeam.id != null}" th:href="@{/admin/teams(tournamentId=${selectedTournament.id})}">Cancel</a>
+        </form>
+    </section>
+
+    <table th:if="${selectedTournament != null}">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Group</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="team : ${teams}">
+            <td th:text="${team.name}"></td>
+            <td th:text="${team.code}"></td>
+            <td th:text="${team.groupCode}"></td>
+            <td><a th:href="@{/admin/teams(tournamentId=${selectedTournament.id},editId=${team.id})}">Edit</a></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(teams)}">
+            <td colspan="4">No teams yet.</td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

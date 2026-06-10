@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Leaderboard')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<main class="container">
+    <div th:replace="~{fragments :: flash}"></div>
+
+    <div class="page-header">
+        <div>
+            <h1>Leaderboard</h1>
+            <div class="muted" th:if="${selectedTournament}" th:text="|${selectedTournament.name} ${selectedTournament.season}|"></div>
+        </div>
+        <form th:if="${!#lists.isEmpty(tournaments)}" th:action="@{/leaderboard}" method="get">
+            <select name="tournamentId" onchange="this.form.submit()">
+                <option th:each="tournament : ${tournaments}"
+                        th:value="${tournament.id}"
+                        th:selected="${selectedTournament != null and selectedTournament.id == tournament.id}"
+                        th:text="|${tournament.name} ${tournament.season}|"></option>
+            </select>
+        </form>
+    </div>
+
+    <div th:if="${#lists.isEmpty(tournaments)}" class="surface">
+        No tournaments yet.
+    </div>
+
+    <table th:if="${!#lists.isEmpty(tournaments)}">
+        <thead>
+        <tr>
+            <th>Rank</th>
+            <th>User</th>
+            <th>Total</th>
+            <th>Exact</th>
+            <th>Outcome</th>
+            <th>Predictions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="entry, iter : ${leaderboard}">
+            <td th:text="${iter.index + 1}"></td>
+            <td th:text="${entry.displayName}"></td>
+            <td th:text="${entry.totalScore}"></td>
+            <td th:text="${entry.exactScores}"></td>
+            <td th:text="${entry.outcomeScores}"></td>
+            <td th:text="${entry.predictionsCount}"></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(leaderboard)}">
+            <td colspan="6">No users yet.</td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

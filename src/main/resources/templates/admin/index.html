@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Admin')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<main class="container">
+    <div th:replace="~{fragments :: flash}"></div>
+
+    <div class="page-header">
+        <div>
+            <h1>Admin</h1>
+            <div class="muted" th:if="${selectedTournament}" th:text="|Active: ${selectedTournament.name} ${selectedTournament.season}|"></div>
+        </div>
+    </div>
+
+    <section class="grid">
+        <a class="stat" th:href="@{/admin/tournaments}">
+            <strong th:text="${tournamentCount}"></strong>
+            <span>Tournaments</span>
+        </a>
+        <a class="stat" th:href="@{/admin/teams}">
+            <strong th:text="${teamCount}"></strong>
+            <span>Teams</span>
+        </a>
+        <a class="stat" th:href="@{/admin/matches}">
+            <strong th:text="${matchCount}"></strong>
+            <span>Matches</span>
+        </a>
+        <a class="stat" th:href="@{/admin/reports}">
+            <strong th:text="${userCount}"></strong>
+            <span>Users</span>
+        </a>
+    </section>
+
+    <section class="surface">
+        <div class="actions">
+            <a class="button" th:href="@{/admin/tournaments}">Tournaments</a>
+            <a class="button" th:href="@{/admin/teams}">Teams</a>
+            <a class="button" th:href="@{/admin/matches}">Matches</a>
+            <a class="button" th:href="@{/admin/results}">Results</a>
+            <a class="button" th:href="@{/admin/reports}">Reports</a>
+            <a class="button" th:href="@{/admin/generate-next-round}">Generate Next Round</a>
+        </div>
+    </section>
+</main>
+</body>
+</html>
