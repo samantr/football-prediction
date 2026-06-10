@@ -1,28 +1,28 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments :: head('Sign up')}"></head>
+<head th:replace="~{fragments :: head('Kayıt Ol')}"></head>
 <body>
 <nav th:replace="~{fragments :: nav}"></nav>
 <main class="container narrow">
     <div th:replace="~{fragments :: flash}"></div>
 
     <section class="surface">
-        <h1>Sign up</h1>
+        <h1>Kayıt Ol</h1>
         <form th:action="@{/signup}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <p>
-                <label for="displayName">Display name</label>
+                <label for="displayName">Görünen ad</label>
                 <input id="displayName" name="displayName" th:value="${displayName}" required>
             </p>
             <p>
-                <label for="email">Email</label>
+                <label for="email">E-posta</label>
                 <input id="email" type="email" name="email" th:value="${email}" required>
             </p>
             <p>
-                <label for="password">Password</label>
+                <label for="password">Şifre</label>
                 <input id="password" type="password" name="password" required minlength="6">
             </p>
-            <button type="submit">Create account</button>
+            <button type="submit">Hesap oluştur</button>
         </form>
     </section>
 </main>

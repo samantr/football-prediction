@@ -86,7 +86,7 @@ public class AdminController {
                 : tournamentService.findAll().stream()
                 .filter(tournament -> tournament.getId().equals(editId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Tournament not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Turnuva bulunamadı."));
 
         model.addAttribute("tournaments", tournamentService.findAll());
         model.addAttribute("editTournament", editTournament);
@@ -103,9 +103,9 @@ public class AdminController {
     ) {
         try {
             tournamentService.saveTournament(id, name, season, active);
-            redirectAttributes.addFlashAttribute("success", "Tournament saved.");
+            redirectAttributes.addFlashAttribute("success", "Turnuva kaydedildi.");
         } catch (IllegalArgumentException | DataIntegrityViolationException ex) {
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            addError(redirectAttributes, ex);
         }
         return "redirect:/admin/tournaments";
     }
@@ -123,7 +123,7 @@ public class AdminController {
                 : teamRepository.findByTournamentIdOrderByGroupCodeAscNameAsc(selectedTournamentId);
         Team editTeam = editId == null
                 ? new Team()
-                : teamRepository.findById(editId).orElseThrow(() -> new IllegalArgumentException("Team not found."));
+                : teamRepository.findById(editId).orElseThrow(() -> new IllegalArgumentException("Takım bulunamadı."));
 
         model.addAttribute("tournaments", tournamentService.findAll());
         model.addAttribute("selectedTournament", selectedTournament);
@@ -143,9 +143,9 @@ public class AdminController {
     ) {
         try {
             adminDataService.saveTeam(id, tournamentId, name, code, groupCode);
-            redirectAttributes.addFlashAttribute("success", "Team saved.");
+            redirectAttributes.addFlashAttribute("success", "Takım kaydedildi.");
         } catch (IllegalArgumentException | DataIntegrityViolationException ex) {
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            addError(redirectAttributes, ex);
         }
         return redirectToAdmin("teams", tournamentId);
     }
@@ -166,7 +166,7 @@ public class AdminController {
                 : matchRepository.findByTournamentIdOrderByKickoffAtAscMatchNoAsc(selectedTournamentId);
         Match editMatch = editId == null
                 ? new Match()
-                : matchRepository.findById(editId).orElseThrow(() -> new IllegalArgumentException("Match not found."));
+                : matchRepository.findById(editId).orElseThrow(() -> new IllegalArgumentException("Maç bulunamadı."));
 
         model.addAttribute("tournaments", tournamentService.findAll());
         model.addAttribute("selectedTournament", selectedTournament);
@@ -208,9 +208,9 @@ public class AdminController {
                     parseDateTime(kickoffAt),
                     status
             );
-            redirectAttributes.addFlashAttribute("success", "Match saved.");
+            redirectAttributes.addFlashAttribute("success", "Maç kaydedildi.");
         } catch (IllegalArgumentException | DataIntegrityViolationException ex) {
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            addError(redirectAttributes, ex);
         }
         return redirectToAdmin("matches", tournamentId);
     }
@@ -239,7 +239,7 @@ public class AdminController {
     ) {
         try {
             adminDataService.enterResult(matchId, homeScore, awayScore);
-            redirectAttributes.addFlashAttribute("success", "Result saved.");
+            redirectAttributes.addFlashAttribute("success", "Sonuç kaydedildi.");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
@@ -277,7 +277,7 @@ public class AdminController {
                 : bracketRuleRepository.findByTournamentIdOrdered(selectedTournamentId);
         BracketRule editRule = editRuleId == null
                 ? new BracketRule()
-                : bracketRuleRepository.findById(editRuleId).orElseThrow(() -> new IllegalArgumentException("Bracket rule not found."));
+                : bracketRuleRepository.findById(editRuleId).orElseThrow(() -> new IllegalArgumentException("Eşleşme kuralı bulunamadı."));
 
         model.addAttribute("tournaments", tournamentService.findAll());
         model.addAttribute("selectedTournament", selectedTournament);
@@ -301,9 +301,9 @@ public class AdminController {
     ) {
         try {
             adminDataService.saveBracketRule(id, tournamentId, targetMatchId, targetSide, sourceType, sourceValue);
-            redirectAttributes.addFlashAttribute("success", "Bracket rule saved.");
+            redirectAttributes.addFlashAttribute("success", "Eşleşme kuralı kaydedildi.");
         } catch (IllegalArgumentException | DataIntegrityViolationException ex) {
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            addError(redirectAttributes, ex);
         }
         return redirectToAdmin("generate-next-round", tournamentId);
     }
@@ -317,9 +317,9 @@ public class AdminController {
             BracketGenerationResult result = bracketService.generateNextRound(tournamentId);
             redirectAttributes.addFlashAttribute("messages", result.getMessages());
             if (result.isAdminReviewRequired()) {
-                redirectAttributes.addFlashAttribute("error", "Admin review required.");
+                redirectAttributes.addFlashAttribute("error", "Yönetici kontrolü gerekli.");
             } else {
-                redirectAttributes.addFlashAttribute("success", "Bracket generation finished.");
+                redirectAttributes.addFlashAttribute("success", "Sonraki tur oluşturuldu.");
             }
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
@@ -335,12 +335,20 @@ public class AdminController {
 
     private LocalDateTime parseDateTime(String value) {
         if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException("Kickoff time is required.");
+            throw new IllegalArgumentException("Başlama zamanı zorunludur.");
         }
         return LocalDateTime.parse(value.trim());
     }
 
     private String formatDateTime(LocalDateTime value) {
         return value == null ? "" : value.format(DATETIME_LOCAL);
+    }
+
+    private void addError(RedirectAttributes redirectAttributes, Exception ex) {
+        if (ex instanceof DataIntegrityViolationException) {
+            redirectAttributes.addFlashAttribute("error", "Kayıt kaydedilemedi. Lütfen bilgileri kontrol edin.");
+            return;
+        }
+        redirectAttributes.addFlashAttribute("error", ex.getMessage());
     }
 }

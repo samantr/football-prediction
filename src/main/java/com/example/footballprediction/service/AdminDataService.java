@@ -42,11 +42,11 @@ public class AdminDataService {
         Tournament tournament = getTournament(tournamentId);
         Team team = id == null
                 ? new Team()
-                : teamRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Team not found."));
+                : teamRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Takım bulunamadı."));
 
         team.setTournament(tournament);
-        team.setName(requireText(name, "Name"));
-        team.setCode(requireText(code, "Code").toUpperCase());
+        team.setName(requireText(name, "Ad"));
+        team.setCode(requireText(code, "Kod").toUpperCase());
         team.setGroupCode(blankToNullUpper(groupCode));
         return teamRepository.save(team);
     }
@@ -66,16 +66,16 @@ public class AdminDataService {
             MatchStatus status
     ) {
         if (matchNo == null || matchNo < 1) {
-            throw new IllegalArgumentException("Match number must be positive.");
+            throw new IllegalArgumentException("Maç numarası pozitif olmalıdır.");
         }
         if (kickoffAt == null) {
-            throw new IllegalArgumentException("Kickoff time is required.");
+            throw new IllegalArgumentException("Başlama zamanı zorunludur.");
         }
 
         Tournament tournament = getTournament(tournamentId);
         Match match = id == null
                 ? new Match()
-                : matchRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Match not found."));
+                : matchRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Maç bulunamadı."));
 
         match.setTournament(tournament);
         match.setMatchNo(matchNo);
@@ -94,11 +94,11 @@ public class AdminDataService {
     @Transactional
     public Match enterResult(Long matchId, Integer homeScore, Integer awayScore) {
         if (homeScore == null || awayScore == null || homeScore < 0 || awayScore < 0) {
-            throw new IllegalArgumentException("Scores must be zero or greater.");
+            throw new IllegalArgumentException("Skorlar sıfır veya daha büyük olmalıdır.");
         }
 
         Match match = matchRepository.findById(matchId)
-                .orElseThrow(() -> new IllegalArgumentException("Match not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Maç bulunamadı."));
         match.setHomeScore(homeScore);
         match.setAwayScore(awayScore);
         match.setStatus(MatchStatus.COMPLETED);
@@ -116,30 +116,30 @@ public class AdminDataService {
     ) {
         BracketRule rule = id == null
                 ? new BracketRule()
-                : bracketRuleRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Bracket rule not found."));
+                : bracketRuleRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Eşleşme kuralı bulunamadı."));
 
         Tournament tournament = getTournament(tournamentId);
         Match targetMatch = matchRepository.findById(targetMatchId)
-                .orElseThrow(() -> new IllegalArgumentException("Target match not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Hedef maç bulunamadı."));
 
         if (!targetMatch.getTournament().getId().equals(tournament.getId())) {
-            throw new IllegalArgumentException("Target match must belong to the selected tournament.");
+            throw new IllegalArgumentException("Hedef maç seçili turnuvaya ait olmalıdır.");
         }
 
         rule.setTournament(tournament);
         rule.setTargetMatch(targetMatch);
         rule.setTargetSide(targetSide);
         rule.setSourceType(sourceType);
-        rule.setSourceValue(requireText(sourceValue, "Source value").toUpperCase());
+        rule.setSourceValue(requireText(sourceValue, "Kaynak değeri").toUpperCase());
         return bracketRuleRepository.save(rule);
     }
 
     private Tournament getTournament(Long tournamentId) {
         if (tournamentId == null) {
-            throw new IllegalArgumentException("Tournament is required.");
+            throw new IllegalArgumentException("Turnuva zorunludur.");
         }
         return tournamentRepository.findById(tournamentId)
-                .orElseThrow(() -> new IllegalArgumentException("Tournament not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Turnuva bulunamadı."));
     }
 
     private Team getOptionalTeam(Long teamId, Long tournamentId) {
@@ -147,16 +147,16 @@ public class AdminDataService {
             return null;
         }
         Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new IllegalArgumentException("Team not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Takım bulunamadı."));
         if (!team.getTournament().getId().equals(tournamentId)) {
-            throw new IllegalArgumentException("Team must belong to the selected tournament.");
+            throw new IllegalArgumentException("Takım seçili turnuvaya ait olmalıdır.");
         }
         return team;
     }
 
     private String requireText(String value, String label) {
         if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException(label + " is required.");
+            throw new IllegalArgumentException(label + " zorunludur.");
         }
         return value.trim();
     }

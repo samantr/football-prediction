@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments :: head('Admin Reports')}"></head>
+<head th:replace="~{fragments :: head('Yönetim Raporları')}"></head>
 <body>
 <nav th:replace="~{fragments :: nav}"></nav>
 <main class="container">
     <div th:replace="~{fragments :: flash}"></div>
 
     <div class="page-header">
-        <h1>Reports</h1>
+        <h1>Raporlar</h1>
         <form th:if="${!#lists.isEmpty(tournaments)}" th:action="@{/admin/reports}" method="get">
             <select name="tournamentId" onchange="this.form.submit()">
                 <option th:each="tournament : ${tournaments}"
@@ -19,12 +19,12 @@
     </div>
 
     <section class="surface">
-        <h2>Users</h2>
+        <h2>Kullanıcılar</h2>
         <table>
             <thead>
             <tr>
-                <th>Name</th>
-                <th>Email</th>
+                <th>Ad</th>
+                <th>E-posta</th>
             </tr>
             </thead>
             <tbody>
@@ -33,56 +33,56 @@
                 <td th:text="${user.email}"></td>
             </tr>
             <tr th:if="${#lists.isEmpty(users)}">
-                <td colspan="2">No users yet.</td>
+                <td colspan="2">Henüz kullanıcı yok.</td>
             </tr>
             </tbody>
         </table>
     </section>
 
     <section class="surface" th:if="${selectedTournament != null}">
-        <h2>Games</h2>
+        <h2>Maçlar</h2>
         <table>
             <thead>
             <tr>
                 <th>No</th>
-                <th>Kickoff</th>
-                <th>Stage</th>
-                <th>Match</th>
-                <th>Result</th>
+                <th>Başlama</th>
+                <th>Aşama</th>
+                <th>Maç</th>
+                <th>Sonuç</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="match : ${matches}">
                 <td th:text="${match.matchNo}"></td>
                 <td class="nowrap" th:text="${#temporals.format(match.kickoffAt, 'yyyy-MM-dd HH:mm')}"></td>
-                <td th:text="${match.stage}"></td>
+                <td th:text="${@uiLabels.matchStage(match.stage)}"></td>
                 <td>
-                    <span th:text="${match.homeTeam != null ? match.homeTeam.name : (match.placeholderHome != null ? match.placeholderHome : 'TBD')}"></span>
-                    <span> vs </span>
-                    <span th:text="${match.awayTeam != null ? match.awayTeam.name : (match.placeholderAway != null ? match.placeholderAway : 'TBD')}"></span>
+                    <span th:text="${match.homeTeam != null ? match.homeTeam.name : (match.placeholderHome != null ? match.placeholderHome : 'Belirlenecek')}"></span>
+                    <span> - </span>
+                    <span th:text="${match.awayTeam != null ? match.awayTeam.name : (match.placeholderAway != null ? match.placeholderAway : 'Belirlenecek')}"></span>
                 </td>
                 <td>
                     <span th:if="${match.homeScore != null and match.awayScore != null}" th:text="|${match.homeScore} - ${match.awayScore}|"></span>
-                    <span th:unless="${match.homeScore != null and match.awayScore != null}" class="muted">Pending</span>
+                    <span th:unless="${match.homeScore != null and match.awayScore != null}" class="muted">Bekliyor</span>
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(matches)}">
-                <td colspan="5">No matches yet.</td>
+                <td colspan="5">Henüz maç yok.</td>
             </tr>
             </tbody>
         </table>
     </section>
 
     <section class="surface">
-        <h2>Scores</h2>
+        <h2>Puanlar</h2>
         <table>
             <thead>
             <tr>
-                <th>User</th>
-                <th>Total</th>
-                <th>Exact</th>
-                <th>Outcome</th>
-                <th>Predictions</th>
+                <th>Kullanıcı</th>
+                <th>Toplam</th>
+                <th>Tam skor</th>
+                <th>Doğru sonuç</th>
+                <th>Tahminler</th>
             </tr>
             </thead>
             <tbody>
@@ -94,22 +94,22 @@
                 <td th:text="${entry.predictionsCount}"></td>
             </tr>
             <tr th:if="${#lists.isEmpty(leaderboard)}">
-                <td colspan="5">No scores yet.</td>
+                <td colspan="5">Henüz puan yok.</td>
             </tr>
             </tbody>
         </table>
     </section>
 
     <section class="surface">
-        <h2>Predictions</h2>
+        <h2>Tahminler</h2>
         <table>
             <thead>
             <tr>
-                <th>User</th>
-                <th>Match</th>
-                <th>Prediction</th>
-                <th>Result</th>
-                <th>Score</th>
+                <th>Kullanıcı</th>
+                <th>Maç</th>
+                <th>Tahmin</th>
+                <th>Sonuç</th>
+                <th>Puan</th>
             </tr>
             </thead>
             <tbody>
@@ -117,19 +117,19 @@
                 <td th:text="${row.user.displayName}"></td>
                 <td>
                     <span th:text="|#${row.match.matchNo} |"></span>
-                    <span th:text="${row.match.homeTeam != null ? row.match.homeTeam.name : (row.match.placeholderHome != null ? row.match.placeholderHome : 'TBD')}"></span>
-                    <span> vs </span>
-                    <span th:text="${row.match.awayTeam != null ? row.match.awayTeam.name : (row.match.placeholderAway != null ? row.match.placeholderAway : 'TBD')}"></span>
+                    <span th:text="${row.match.homeTeam != null ? row.match.homeTeam.name : (row.match.placeholderHome != null ? row.match.placeholderHome : 'Belirlenecek')}"></span>
+                    <span> - </span>
+                    <span th:text="${row.match.awayTeam != null ? row.match.awayTeam.name : (row.match.placeholderAway != null ? row.match.placeholderAway : 'Belirlenecek')}"></span>
                 </td>
                 <td th:text="|${row.prediction.predictedHomeScore} - ${row.prediction.predictedAwayScore}|"></td>
                 <td>
                     <span th:if="${row.match.homeScore != null and row.match.awayScore != null}" th:text="|${row.match.homeScore} - ${row.match.awayScore}|"></span>
-                    <span th:unless="${row.match.homeScore != null and row.match.awayScore != null}" class="muted">Pending</span>
+                    <span th:unless="${row.match.homeScore != null and row.match.awayScore != null}" class="muted">Bekliyor</span>
                 </td>
                 <td th:text="${row.score}"></td>
             </tr>
             <tr th:if="${#lists.isEmpty(rows)}">
-                <td colspan="5">No predictions yet.</td>
+                <td colspan="5">Henüz tahmin yok.</td>
             </tr>
             </tbody>
         </table>

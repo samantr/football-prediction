@@ -34,17 +34,17 @@ public class TournamentService {
             return findDefaultTournament();
         }
         return tournamentRepository.findById(tournamentId)
-                .orElseThrow(() -> new IllegalArgumentException("Tournament not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Turnuva bulunamadı."));
     }
 
     @Transactional
     public Tournament saveTournament(Long id, String name, String season, boolean active) {
         Tournament tournament = id == null
                 ? new Tournament()
-                : tournamentRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Tournament not found."));
+                : tournamentRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Turnuva bulunamadı."));
 
-        tournament.setName(requireText(name, "Name"));
-        tournament.setSeason(requireText(season, "Season"));
+        tournament.setName(requireText(name, "Ad"));
+        tournament.setSeason(requireText(season, "Sezon"));
         tournament.setActive(active);
 
         Tournament saved = tournamentRepository.save(tournament);
@@ -60,7 +60,7 @@ public class TournamentService {
 
     private String requireText(String value, String label) {
         if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException(label + " is required.");
+            throw new IllegalArgumentException(label + " zorunludur.");
         }
         return value.trim();
     }

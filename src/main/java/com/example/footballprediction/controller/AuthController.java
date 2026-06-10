@@ -42,7 +42,7 @@ public class AuthController {
     ) {
         try {
             userService.signUp(email, displayName, password);
-            redirectAttributes.addFlashAttribute("success", "Account created. Please log in.");
+            redirectAttributes.addFlashAttribute("success", "Hesap oluşturuldu. Lütfen giriş yapın.");
             return "redirect:/login";
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());

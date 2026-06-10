@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments :: head('Admin Matches')}"></head>
+<head th:replace="~{fragments :: head('Yönetim Maçları')}"></head>
 <body>
 <nav th:replace="~{fragments :: nav}"></nav>
 <main class="container">
     <div th:replace="~{fragments :: flash}"></div>
 
     <div class="page-header">
-        <h1>Matches</h1>
+        <h1>Maçlar</h1>
         <form th:if="${!#lists.isEmpty(tournaments)}" th:action="@{/admin/matches}" method="get">
             <select name="tournamentId" onchange="this.form.submit()">
                 <option th:each="tournament : ${tournaments}"
@@ -19,41 +19,41 @@
     </div>
 
     <div th:if="${selectedTournament == null}" class="surface">
-        Create a tournament first.
+        Önce bir turnuva oluşturun.
     </div>
 
     <section th:if="${selectedTournament != null}" class="surface">
-        <h2 th:text="${editMatch.id == null ? 'Create match' : 'Edit match'}"></h2>
+        <h2 th:text="${editMatch.id == null ? 'Maç oluştur' : 'Maçı düzenle'}"></h2>
         <form th:action="@{/admin/matches}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <input type="hidden" name="id" th:value="${editMatch.id}">
             <input type="hidden" name="tournamentId" th:value="${selectedTournament.id}">
             <div class="form-grid">
                 <p>
-                    <label for="matchNo">Match no</label>
+                    <label for="matchNo">Maç no</label>
                     <input id="matchNo" type="number" min="1" name="matchNo" th:value="${editMatch.matchNo}" required>
                 </p>
                 <p>
-                    <label for="stage">Stage</label>
+                    <label for="stage">Aşama</label>
                     <select id="stage" name="stage" required>
                         <option th:each="stage : ${stages}"
                                 th:value="${stage}"
                                 th:selected="${editMatch.stage == stage}"
-                                th:text="${stage}"></option>
+                                th:text="${@uiLabels.matchStage(stage)}"></option>
                     </select>
                 </p>
                 <p>
-                    <label for="groupCode">Group</label>
+                    <label for="groupCode">Grup</label>
                     <input id="groupCode" name="groupCode" th:value="${editMatch.groupCode}">
                 </p>
                 <p>
-                    <label for="kickoffAt">Kickoff</label>
+                    <label for="kickoffAt">Başlama</label>
                     <input id="kickoffAt" type="datetime-local" name="kickoffAt" th:value="${editKickoffAt}" required>
                 </p>
                 <p>
-                    <label for="homeTeamId">Home team</label>
+                    <label for="homeTeamId">Ev sahibi takım</label>
                     <select id="homeTeamId" name="homeTeamId">
-                        <option value="">None</option>
+                        <option value="">Yok</option>
                         <option th:each="team : ${teams}"
                                 th:value="${team.id}"
                                 th:selected="${editMatch.homeTeam != null and editMatch.homeTeam.id == team.id}"
@@ -61,9 +61,9 @@
                     </select>
                 </p>
                 <p>
-                    <label for="awayTeamId">Away team</label>
+                    <label for="awayTeamId">Deplasman takımı</label>
                     <select id="awayTeamId" name="awayTeamId">
-                        <option value="">None</option>
+                        <option value="">Yok</option>
                         <option th:each="team : ${teams}"
                                 th:value="${team.id}"
                                 th:selected="${editMatch.awayTeam != null and editMatch.awayTeam.id == team.id}"
@@ -71,25 +71,25 @@
                     </select>
                 </p>
                 <p>
-                    <label for="placeholderHome">Home placeholder</label>
+                    <label for="placeholderHome">Ev sahibi açıklaması</label>
                     <input id="placeholderHome" name="placeholderHome" th:value="${editMatch.placeholderHome}">
                 </p>
                 <p>
-                    <label for="placeholderAway">Away placeholder</label>
+                    <label for="placeholderAway">Deplasman açıklaması</label>
                     <input id="placeholderAway" name="placeholderAway" th:value="${editMatch.placeholderAway}">
                 </p>
                 <p>
-                    <label for="status">Status</label>
+                    <label for="status">Durum</label>
                     <select id="status" name="status" required>
                         <option th:each="status : ${statuses}"
                                 th:value="${status}"
                                 th:selected="${editMatch.status == status}"
-                                th:text="${status}"></option>
+                                th:text="${@uiLabels.matchStatus(status)}"></option>
                     </select>
                 </p>
             </div>
-            <button type="submit">Save</button>
-            <a th:if="${editMatch.id != null}" th:href="@{/admin/matches(tournamentId=${selectedTournament.id})}">Cancel</a>
+            <button type="submit">Kaydet</button>
+            <a th:if="${editMatch.id != null}" th:href="@{/admin/matches(tournamentId=${selectedTournament.id})}">İptal</a>
         </form>
     </section>
 
@@ -97,26 +97,26 @@
         <thead>
         <tr>
             <th>No</th>
-            <th>Kickoff</th>
-            <th>Stage</th>
-            <th>Home</th>
-            <th>Away</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>Başlama</th>
+            <th>Aşama</th>
+            <th>Ev sahibi</th>
+            <th>Deplasman</th>
+            <th>Durum</th>
+            <th>İşlemler</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="match : ${matches}">
             <td th:text="${match.matchNo}"></td>
             <td class="nowrap" th:text="${#temporals.format(match.kickoffAt, 'yyyy-MM-dd HH:mm')}"></td>
-            <td th:text="${match.stage}"></td>
-            <td th:text="${match.homeTeam != null ? match.homeTeam.name : (match.placeholderHome != null ? match.placeholderHome : 'TBD')}"></td>
-            <td th:text="${match.awayTeam != null ? match.awayTeam.name : (match.placeholderAway != null ? match.placeholderAway : 'TBD')}"></td>
-            <td th:text="${match.status}"></td>
-            <td><a th:href="@{/admin/matches(tournamentId=${selectedTournament.id},editId=${match.id})}">Edit</a></td>
+            <td th:text="${@uiLabels.matchStage(match.stage)}"></td>
+            <td th:text="${match.homeTeam != null ? match.homeTeam.name : (match.placeholderHome != null ? match.placeholderHome : 'Belirlenecek')}"></td>
+            <td th:text="${match.awayTeam != null ? match.awayTeam.name : (match.placeholderAway != null ? match.placeholderAway : 'Belirlenecek')}"></td>
+            <td th:text="${@uiLabels.matchStatus(match.status)}"></td>
+            <td><a th:href="@{/admin/matches(tournamentId=${selectedTournament.id},editId=${match.id})}">Düzenle</a></td>
         </tr>
         <tr th:if="${#lists.isEmpty(matches)}">
-            <td colspan="7">No matches yet.</td>
+            <td colspan="7">Henüz maç yok.</td>
         </tr>
         </tbody>
     </table>

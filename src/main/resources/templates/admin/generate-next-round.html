@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments :: head('Generate Next Round')}"></head>
+<head th:replace="~{fragments :: head('Sonraki Turu Oluştur')}"></head>
 <body>
 <nav th:replace="~{fragments :: nav}"></nav>
 <main class="container">
     <div th:replace="~{fragments :: flash}"></div>
 
     <div class="page-header">
-        <h1>Generate Next Round</h1>
+        <h1>Sonraki Turu Oluştur</h1>
         <form th:if="${!#lists.isEmpty(tournaments)}" th:action="@{/admin/generate-next-round}" method="get">
             <select name="tournamentId" onchange="this.form.submit()">
                 <option th:each="tournament : ${tournaments}"
@@ -19,50 +19,50 @@
     </div>
 
     <div th:if="${selectedTournament == null}" class="surface">
-        Create a tournament first.
+        Önce bir turnuva oluşturun.
     </div>
 
     <section th:if="${selectedTournament != null}" class="surface">
-        <h2 th:text="${editRule.id == null ? 'Create bracket rule' : 'Edit bracket rule'}"></h2>
+        <h2 th:text="${editRule.id == null ? 'Eşleşme kuralı oluştur' : 'Eşleşme kuralını düzenle'}"></h2>
         <form th:action="@{/admin/generate-next-round/rules}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <input type="hidden" name="id" th:value="${editRule.id}">
             <input type="hidden" name="tournamentId" th:value="${selectedTournament.id}">
             <div class="form-grid">
                 <p>
-                    <label for="targetMatchId">Target match</label>
+                    <label for="targetMatchId">Hedef maç</label>
                     <select id="targetMatchId" name="targetMatchId" required>
                         <option th:each="match : ${matches}"
                                 th:value="${match.id}"
                                 th:selected="${editRule.targetMatch != null and editRule.targetMatch.id == match.id}"
-                                th:text="|#${match.matchNo} ${match.stage}|"></option>
+                                th:text="|#${match.matchNo} ${@uiLabels.matchStage(match.stage)}|"></option>
                     </select>
                 </p>
                 <p>
-                    <label for="targetSide">Target side</label>
+                    <label for="targetSide">Hedef taraf</label>
                     <select id="targetSide" name="targetSide" required>
                         <option th:each="side : ${targetSides}"
                                 th:value="${side}"
                                 th:selected="${editRule.targetSide == side}"
-                                th:text="${side}"></option>
+                                th:text="${@uiLabels.targetSide(side)}"></option>
                     </select>
                 </p>
                 <p>
-                    <label for="sourceType">Source type</label>
+                    <label for="sourceType">Kaynak türü</label>
                     <select id="sourceType" name="sourceType" required>
                         <option th:each="type : ${sourceTypes}"
                                 th:value="${type}"
                                 th:selected="${editRule.sourceType == type}"
-                                th:text="${type}"></option>
+                                th:text="${@uiLabels.bracketSourceType(type)}"></option>
                     </select>
                 </p>
                 <p>
-                    <label for="sourceValue">Source value</label>
+                    <label for="sourceValue">Kaynak değeri</label>
                     <input id="sourceValue" name="sourceValue" th:value="${editRule.sourceValue}" required>
                 </p>
             </div>
-            <button type="submit">Save rule</button>
-            <a th:if="${editRule.id != null}" th:href="@{/admin/generate-next-round(tournamentId=${selectedTournament.id})}">Cancel</a>
+            <button type="submit">Kuralı kaydet</button>
+            <a th:if="${editRule.id != null}" th:href="@{/admin/generate-next-round(tournamentId=${selectedTournament.id})}">İptal</a>
         </form>
     </section>
 
@@ -70,30 +70,30 @@
         <form th:action="@{/admin/generate-next-round}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <input type="hidden" name="tournamentId" th:value="${selectedTournament.id}">
-            <button type="submit">Generate</button>
+            <button type="submit">Oluştur</button>
         </form>
     </section>
 
     <table th:if="${selectedTournament != null}">
         <thead>
         <tr>
-            <th>Target</th>
-            <th>Side</th>
-            <th>Source type</th>
-            <th>Source value</th>
-            <th>Actions</th>
+            <th>Hedef</th>
+            <th>Taraf</th>
+            <th>Kaynak türü</th>
+            <th>Kaynak değeri</th>
+            <th>İşlemler</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="rule : ${rules}">
-            <td th:text="|#${rule.targetMatch.matchNo} ${rule.targetMatch.stage}|"></td>
-            <td th:text="${rule.targetSide}"></td>
-            <td th:text="${rule.sourceType}"></td>
+            <td th:text="|#${rule.targetMatch.matchNo} ${@uiLabels.matchStage(rule.targetMatch.stage)}|"></td>
+            <td th:text="${@uiLabels.targetSide(rule.targetSide)}"></td>
+            <td th:text="${@uiLabels.bracketSourceType(rule.sourceType)}"></td>
             <td th:text="${rule.sourceValue}"></td>
-            <td><a th:href="@{/admin/generate-next-round(tournamentId=${selectedTournament.id},editRuleId=${rule.id})}">Edit</a></td>
+            <td><a th:href="@{/admin/generate-next-round(tournamentId=${selectedTournament.id},editRuleId=${rule.id})}">Düzenle</a></td>
         </tr>
         <tr th:if="${#lists.isEmpty(rules)}">
-            <td colspan="5">No bracket rules yet.</td>
+            <td colspan="5">Henüz eşleşme kuralı yok.</td>
         </tr>
         </tbody>
     </table>

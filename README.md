@@ -1,6 +1,7 @@
 # Football Prediction MVP
 
 Minimal Spring Boot application for a football tournament prediction competition.
+The application UI is Turkish and rendered server-side with Thymeleaf.
 
 ## Stack
 
@@ -25,7 +26,7 @@ Minimal Spring Boot application for a football tournament prediction competition
 - User prediction report
 - Admin report with users, games, predictions, and scores
 - Multiple tournaments
-- Bracket rule based knockout generation with `Admin review required` when standings or knockout results are not decisive
+- Bracket rule based knockout generation with the Turkish `Yönetici kontrolü gerekli` UI message when standings or knockout results are not decisive
 
 ## Setup
 
@@ -89,7 +90,7 @@ Rule examples:
 - `MATCH_WINNER` with source value `49` fills the target side with the winner of match 49.
 - `MATCH_LOSER` with source value `50` fills the target side with the loser of match 50.
 
-Group ranking uses points, goal difference, then goals for. If those values do not break a tie at the needed position, the target match is marked `ADMIN_REVIEW_REQUIRED` and the UI shows `Admin review required`.
+Group ranking uses points, goal difference, then goals for. If those values do not break a tie at the needed position, the target match is marked `ADMIN_REVIEW_REQUIRED` and the UI shows `Yönetici kontrolü gerekli`.
 
 ## Main Routes
 
@@ -112,3 +113,4 @@ Group ranking uses points, goal difference, then goals for. If those values do n
 - Flyway owns the schema in `src/main/resources/db/migration`.
 - JPA is configured with `ddl-auto=validate`.
 - The app is intentionally server-rendered with Thymeleaf. No React is used.
+- User-facing pages, navigation, admin screens, reports, and messages are in Turkish.

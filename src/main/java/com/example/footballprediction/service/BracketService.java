@@ -39,14 +39,14 @@ public class BracketService {
     @Transactional
     public BracketGenerationResult generateNextRound(Long tournamentId) {
         tournamentRepository.findById(tournamentId)
-                .orElseThrow(() -> new IllegalArgumentException("Tournament not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Turnuva bulunamadı."));
 
         List<String> messages = new ArrayList<>();
         boolean adminReviewRequired = false;
         List<BracketRule> rules = bracketRuleRepository.findByTournamentIdOrdered(tournamentId);
 
         if (rules.isEmpty()) {
-            messages.add("No bracket rules have been configured for this tournament.");
+            messages.add("Bu turnuva için henüz eşleşme kuralı ayarlanmadı.");
             return new BracketGenerationResult(messages, false);
         }
 
@@ -57,8 +57,8 @@ public class BracketService {
             if (resolution.team() == null) {
                 adminReviewRequired = true;
                 targetMatch.setStatus(MatchStatus.ADMIN_REVIEW_REQUIRED);
-                messages.add("Match " + targetMatch.getMatchNo() + " " + rule.getTargetSide()
-                        + ": Admin review required. " + resolution.message());
+                messages.add("Maç " + targetMatch.getMatchNo() + " " + targetSideLabel(rule.getTargetSide())
+                        + ": Yönetici kontrolü gerekli. " + resolution.message());
                 continue;
             }
 
@@ -78,8 +78,8 @@ public class BracketService {
                 targetMatch.setStatus(MatchStatus.SCHEDULED);
             }
 
-            messages.add("Match " + targetMatch.getMatchNo() + " " + rule.getTargetSide()
-                    + " filled with " + resolution.team().getName() + ".");
+            messages.add("Maç " + targetMatch.getMatchNo() + " " + targetSideLabel(rule.getTargetSide())
+                    + " " + resolution.team().getName() + " ile dolduruldu.");
         }
 
         return new BracketGenerationResult(messages, adminReviewRequired);
@@ -103,7 +103,7 @@ public class BracketService {
         );
 
         if (groupMatches.isEmpty()) {
-            return Resolution.review("No completed group matches were found for group " + groupCode + ".");
+            return Resolution.review(groupCode + " grubu için tamamlanmış grup maçı bulunamadı.");
         }
 
         for (Match match : groupMatches) {
@@ -112,7 +112,7 @@ public class BracketService {
                     || match.getStatus() != MatchStatus.COMPLETED
                     || match.getHomeScore() == null
                     || match.getAwayScore() == null) {
-                return Resolution.review("Group " + groupCode + " is not fully resulted.");
+                return Resolution.review(groupCode + " grubundaki tüm sonuçlar girilmemiş.");
             }
         }
 
@@ -132,15 +132,15 @@ public class BracketService {
 
         int position = rule.getSourceType() == BracketSourceType.GROUP_WINNER ? 0 : 1;
         if (sorted.size() <= position) {
-            return Resolution.review("Group " + groupCode + " does not have enough teams.");
+            return Resolution.review(groupCode + " grubunda yeterli takım yok.");
         }
 
         Standing selected = sorted.get(position);
         if (position > 0 && sameTieBreakRank(sorted.get(position - 1), selected)) {
-            return Resolution.review("Tie-breaker data is not enough for group " + groupCode + ".");
+            return Resolution.review(groupCode + " grubu için eşitlik bozma verileri yeterli değil.");
         }
         if (position + 1 < sorted.size() && sameTieBreakRank(selected, sorted.get(position + 1))) {
-            return Resolution.review("Tie-breaker data is not enough for group " + groupCode + ".");
+            return Resolution.review(groupCode + " grubu için eşitlik bozma verileri yeterli değil.");
         }
 
         return Resolution.resolved(selected.team());
@@ -151,13 +151,13 @@ public class BracketService {
         try {
             sourceMatchNo = Integer.valueOf(rule.getSourceValue().trim());
         } catch (NumberFormatException ex) {
-            return Resolution.review("Source value for match winner/loser must be a match number.");
+            return Resolution.review("Maç galibi/mağlubu için kaynak değeri maç numarası olmalıdır.");
         }
 
         Match sourceMatch = matchRepository.findByTournamentIdAndMatchNo(rule.getTournament().getId(), sourceMatchNo)
                 .orElse(null);
         if (sourceMatch == null) {
-            return Resolution.review("Source match " + sourceMatchNo + " was not found.");
+            return Resolution.review("Kaynak maç " + sourceMatchNo + " bulunamadı.");
         }
 
         if (sourceMatch.getStatus() != MatchStatus.COMPLETED
@@ -165,11 +165,11 @@ public class BracketService {
                 || sourceMatch.getAwayScore() == null
                 || sourceMatch.getHomeTeam() == null
                 || sourceMatch.getAwayTeam() == null) {
-            return Resolution.review("Source match " + sourceMatchNo + " is not fully resulted.");
+            return Resolution.review("Kaynak maç " + sourceMatchNo + " için tüm sonuçlar girilmemiş.");
         }
 
         if (sourceMatch.getHomeScore().equals(sourceMatch.getAwayScore())) {
-            return Resolution.review("Source match " + sourceMatchNo + " is tied.");
+            return Resolution.review("Kaynak maç " + sourceMatchNo + " berabere bitti.");
         }
 
         boolean homeWon = sourceMatch.getHomeScore() > sourceMatch.getAwayScore();
@@ -200,6 +200,13 @@ public class BracketService {
         return a.points() == b.points()
                 && a.goalDifference() == b.goalDifference()
                 && a.goalsFor() == b.goalsFor();
+    }
+
+    private String targetSideLabel(TargetSide side) {
+        return switch (side) {
+            case HOME -> "ev sahibi";
+            case AWAY -> "deplasman";
+        };
     }
 
     private static class Standing {

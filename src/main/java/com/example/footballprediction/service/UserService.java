@@ -20,16 +20,16 @@ public class UserService {
 
     @Transactional
     public User signUp(String email, String displayName, String password) {
-        String normalizedEmail = requireText(email, "Email").toLowerCase();
-        String normalizedName = requireText(displayName, "Display name");
-        String normalizedPassword = requireText(password, "Password");
+        String normalizedEmail = requireText(email, "E-posta").toLowerCase();
+        String normalizedName = requireText(displayName, "Görünen ad");
+        String normalizedPassword = requireText(password, "Şifre");
 
         if (normalizedPassword.length() < 6) {
-            throw new IllegalArgumentException("Password must be at least 6 characters.");
+            throw new IllegalArgumentException("Şifre en az 6 karakter olmalıdır.");
         }
 
         if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new IllegalArgumentException("Email is already registered.");
+            throw new IllegalArgumentException("Bu e-posta zaten kayıtlı.");
         }
 
         User user = new User();
@@ -43,12 +43,12 @@ public class UserService {
     @Transactional(readOnly = true)
     public User getByEmail(String email) {
         return userRepository.findByEmail(email.trim().toLowerCase())
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı."));
     }
 
     private String requireText(String value, String label) {
         if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException(label + " is required.");
+            throw new IllegalArgumentException(label + " zorunludur.");
         }
         return value.trim();
     }

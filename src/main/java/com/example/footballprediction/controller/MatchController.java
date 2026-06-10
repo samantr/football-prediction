@@ -80,7 +80,7 @@ public class MatchController {
         try {
             User user = userService.getByEmail(authentication.getName());
             predictionService.savePrediction(user.getId(), matchId, predictedHomeScore, predictedAwayScore);
-            redirectAttributes.addFlashAttribute("success", "Prediction saved.");
+            redirectAttributes.addFlashAttribute("success", "Tahmin kaydedildi.");
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }

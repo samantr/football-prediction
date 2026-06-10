@@ -39,18 +39,18 @@ public class PredictionService {
     @Transactional
     public Prediction savePrediction(Long userId, Long matchId, Integer homeScore, Integer awayScore) {
         if (homeScore == null || awayScore == null || homeScore < 0 || awayScore < 0) {
-            throw new IllegalArgumentException("Predicted scores must be zero or greater.");
+            throw new IllegalArgumentException("Tahmin skorları sıfır veya daha büyük olmalıdır.");
         }
 
         Match match = matchRepository.findById(matchId)
-                .orElseThrow(() -> new IllegalArgumentException("Match not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Maç bulunamadı."));
 
         if (!canEditPrediction(match)) {
-            throw new IllegalStateException("Prediction editing is closed for this match.");
+            throw new IllegalStateException("Bu maç için tahmin düzenleme kapalı.");
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı."));
 
         Prediction prediction = predictionRepository.findByUserIdAndMatchId(userId, matchId)
                 .orElseGet(Prediction::new);

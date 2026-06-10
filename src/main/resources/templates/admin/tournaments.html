@@ -1,58 +1,58 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments :: head('Admin Tournaments')}"></head>
+<head th:replace="~{fragments :: head('Yönetim Turnuvaları')}"></head>
 <body>
 <nav th:replace="~{fragments :: nav}"></nav>
 <main class="container">
     <div th:replace="~{fragments :: flash}"></div>
 
     <div class="page-header">
-        <h1>Tournaments</h1>
-        <a th:href="@{/admin}">Admin dashboard</a>
+        <h1>Turnuvalar</h1>
+        <a th:href="@{/admin}">Yönetim paneli</a>
     </div>
 
     <section class="surface">
-        <h2 th:text="${editTournament.id == null ? 'Create tournament' : 'Edit tournament'}"></h2>
+        <h2 th:text="${editTournament.id == null ? 'Turnuva oluştur' : 'Turnuvayı düzenle'}"></h2>
         <form th:action="@{/admin/tournaments}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <input type="hidden" name="id" th:value="${editTournament.id}">
             <div class="form-grid">
                 <p>
-                    <label for="name">Name</label>
+                    <label for="name">Ad</label>
                     <input id="name" name="name" th:value="${editTournament.name}" required>
                 </p>
                 <p>
-                    <label for="season">Season</label>
+                    <label for="season">Sezon</label>
                     <input id="season" name="season" th:value="${editTournament.season}" required>
                 </p>
                 <p>
-                    <label for="active">Active</label>
+                    <label for="active">Aktif</label>
                     <input id="active" type="checkbox" name="active" value="true" th:checked="${editTournament.active}">
                 </p>
             </div>
-            <button type="submit">Save</button>
-            <a th:if="${editTournament.id != null}" th:href="@{/admin/tournaments}">Cancel</a>
+            <button type="submit">Kaydet</button>
+            <a th:if="${editTournament.id != null}" th:href="@{/admin/tournaments}">İptal</a>
         </form>
     </section>
 
     <table>
         <thead>
         <tr>
-            <th>Name</th>
-            <th>Season</th>
-            <th>Active</th>
-            <th>Actions</th>
+            <th>Ad</th>
+            <th>Sezon</th>
+            <th>Aktif</th>
+            <th>İşlemler</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="tournament : ${tournaments}">
             <td th:text="${tournament.name}"></td>
             <td th:text="${tournament.season}"></td>
-            <td th:text="${tournament.active ? 'Yes' : 'No'}"></td>
-            <td><a th:href="@{/admin/tournaments(editId=${tournament.id})}">Edit</a></td>
+            <td th:text="${tournament.active ? 'Evet' : 'Hayır'}"></td>
+            <td><a th:href="@{/admin/tournaments(editId=${tournament.id})}">Düzenle</a></td>
         </tr>
         <tr th:if="${#lists.isEmpty(tournaments)}">
-            <td colspan="4">No tournaments yet.</td>
+            <td colspan="4">Henüz turnuva yok.</td>
         </tr>
         </tbody>
     </table>
