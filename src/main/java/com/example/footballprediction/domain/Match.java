@@ -66,6 +66,12 @@ public class Match {
     @Column(nullable = false)
     private MatchStatus status = MatchStatus.SCHEDULED;
 
+    @Column(name = "external_provider")
+    private String externalProvider;
+
+    @Column(name = "external_id")
+    private String externalId;
+
     public Long getId() {
         return id;
     }
@@ -168,5 +174,21 @@ public class Match {
 
     public void setStatus(MatchStatus status) {
         this.status = status;
+    }
+
+    public String getExternalProvider() {
+        return externalProvider;
+    }
+
+    public void setExternalProvider(String externalProvider) {
+        this.externalProvider = externalProvider;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 }

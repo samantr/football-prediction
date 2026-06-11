@@ -22,6 +22,8 @@ The application UI is Turkish and rendered server-side with Thymeleaf.
 - Prediction editing closes 1 hour before kickoff in `PredictionService`
 - Admin CRUD pages for tournaments, teams, and matches
 - Admin result entry
+- Optional admin import/sync from football-data.org
+- Admin delete and test cleanup tools
 - Public leaderboard
 - User prediction report
 - Admin report with users, games, predictions, and scores
@@ -40,6 +42,14 @@ create database football_predictions owner football;
 2. Configure the app.
 
 Copy `.env.example` to `.env` and update values as needed. Spring Boot imports `.env` automatically through `spring.config.import`.
+
+Football-data.org import is optional. To enable it, create an API token at [football-data.org](https://www.football-data.org/client/register), then set it in `.env`:
+
+```text
+FOOTBALL_DATA_API_TOKEN=your-token-here
+```
+
+The first supported provider is football-data.org. The admin import page defaults to World Cup competition code `WC` and season `2026`.
 
 3. Run the app.
 
@@ -73,11 +83,106 @@ Change this in `.env` before using real data.
 7. Admin enters results in `/admin/results`.
 8. Leaderboard and reports update from the stored predictions and results.
 
+Optional import workflow:
+
+1. Set `FOOTBALL_DATA_API_TOKEN`.
+2. Log in as admin and open `/admin/import`.
+3. Select a tournament.
+4. Sync teams, matches, or both.
+5. Review and edit imported data manually as needed.
+
+Imported data is stored in the local database. Local matches are matched by `externalProvider` and `externalId` first, existing imported matches are updated, new imported matches are created, and local matches are never deleted automatically.
+
+## Admin Delete And Cleanup
+
+Admin pages include Turkish `Sil` buttons for tournaments, teams, matches, and bracket rules. Deletes use POST forms with CSRF protection and a browser confirmation.
+
+Safe delete rules:
+
+- A match cannot be deleted if predictions exist.
+- A team cannot be deleted if matches use it.
+- A tournament cannot be deleted if teams, matches, predictions, or bracket rules exist.
+- Bracket rules can be deleted from `/admin/generate-next-round`.
+
+The admin cleanup page at `/admin/cleanup` can remove local/test data. It deletes predictions, bracket rules, matches, teams, tournaments, and normal users, but it does not delete admin users.
+
 ## Scoring
 
 - Exact score: 3 points
 - Correct match outcome only: 1 point
 - Wrong outcome: 0 points
+- Incomplete or unplayed match: 0 points
+
+Examples:
+
+- Real 2-1, prediction 2-1: 3 points
+- Real 2-1, prediction 1-0: 1 point
+- Real 2-1, prediction 1-1: 0 points
+- Real 1-1, prediction 0-0: 1 point
+- Real 1-1, prediction 1-1: 3 points
+- Real not completed: 0 points
+
+## Same Wi-Fi Access
+
+English:
+
+1. Run the app locally with `mvn spring-boot:run`.
+2. On Windows, find your computer's local IP address:
+
+```powershell
+ipconfig
+```
+
+3. Other devices on the same Wi-Fi can open:
+
+```text
+http://LOCAL_IP:8080
+```
+
+Example:
+
+```text
+http://192.168.1.25:8080
+```
+
+Windows Firewall may ask for permission. Allow Java on Private networks.
+
+If needed, configure these optional properties:
+
+```properties
+server.address=0.0.0.0
+server.port=8080
+```
+
+Turkish:
+
+1. Uygulamayı yerelde `mvn spring-boot:run` ile çalıştırın.
+2. Windows'ta bilgisayarın yerel IP adresini bulun:
+
+```powershell
+ipconfig
+```
+
+3. Aynı Wi-Fi ağındaki diğer cihazlar şu adresi açabilir:
+
+```text
+http://LOCAL_IP:8080
+```
+
+Örnek:
+
+```text
+http://192.168.1.25:8080
+```
+
+Windows Güvenlik Duvarı izin isteyebilir. Java için Özel ağlarda izin verin.
+
+Gerekirse şu isteğe bağlı ayarları kullanın:
+
+```properties
+server.address=0.0.0.0
+server.port=8080
+```
 
 ## Bracket Rules
 
@@ -106,6 +211,8 @@ Group ranking uses points, goal difference, then goals for. If those values do n
 - `/admin/matches`
 - `/admin/results`
 - `/admin/reports`
+- `/admin/import`
+- `/admin/cleanup`
 - `/admin/generate-next-round`
 
 ## Notes

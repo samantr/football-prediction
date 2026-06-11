@@ -34,6 +34,12 @@ public class Team {
     @Column(name = "group_code")
     private String groupCode;
 
+    @Column(name = "external_provider")
+    private String externalProvider;
+
+    @Column(name = "external_id")
+    private String externalId;
+
     public Long getId() {
         return id;
     }
@@ -72,5 +78,21 @@ public class Team {
 
     public void setGroupCode(String groupCode) {
         this.groupCode = groupCode;
+    }
+
+    public String getExternalProvider() {
+        return externalProvider;
+    }
+
+    public void setExternalProvider(String externalProvider) {
+        this.externalProvider = externalProvider;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 }

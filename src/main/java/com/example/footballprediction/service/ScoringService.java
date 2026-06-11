@@ -28,6 +28,7 @@ public class ScoringService {
 
     public int calculateScore(Prediction prediction) {
         if (prediction == null
+                || prediction.getMatch() == null
                 || prediction.getMatch().getStatus() != MatchStatus.COMPLETED
                 || prediction.getMatch().getHomeScore() == null
                 || prediction.getMatch().getAwayScore() == null) {

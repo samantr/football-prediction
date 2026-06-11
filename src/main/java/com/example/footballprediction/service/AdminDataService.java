@@ -10,6 +10,7 @@ import com.example.footballprediction.domain.Team;
 import com.example.footballprediction.domain.Tournament;
 import com.example.footballprediction.repository.BracketRuleRepository;
 import com.example.footballprediction.repository.MatchRepository;
+import com.example.footballprediction.repository.PredictionRepository;
 import com.example.footballprediction.repository.TeamRepository;
 import com.example.footballprediction.repository.TournamentRepository;
 import org.springframework.stereotype.Service;
@@ -24,17 +25,20 @@ public class AdminDataService {
     private final TeamRepository teamRepository;
     private final MatchRepository matchRepository;
     private final BracketRuleRepository bracketRuleRepository;
+    private final PredictionRepository predictionRepository;
 
     public AdminDataService(
             TournamentRepository tournamentRepository,
             TeamRepository teamRepository,
             MatchRepository matchRepository,
-            BracketRuleRepository bracketRuleRepository
+            BracketRuleRepository bracketRuleRepository,
+            PredictionRepository predictionRepository
     ) {
         this.tournamentRepository = tournamentRepository;
         this.teamRepository = teamRepository;
         this.matchRepository = matchRepository;
         this.bracketRuleRepository = bracketRuleRepository;
+        this.predictionRepository = predictionRepository;
     }
 
     @Transactional
@@ -132,6 +136,54 @@ public class AdminDataService {
         rule.setSourceType(sourceType);
         rule.setSourceValue(requireText(sourceValue, "Kaynak değeri").toUpperCase());
         return bracketRuleRepository.save(rule);
+    }
+
+    @Transactional
+    public void deleteTournament(Long tournamentId) {
+        Tournament tournament = getTournament(tournamentId);
+        if (teamRepository.countByTournamentId(tournament.getId()) > 0
+                || matchRepository.countByTournamentId(tournament.getId()) > 0
+                || predictionRepository.countByMatchTournamentId(tournament.getId()) > 0
+                || bracketRuleRepository.countByTournamentId(tournament.getId()) > 0) {
+            throw new IllegalStateException("Bu turnuva bağlı takım, maç, tahmin veya eşleşme kuralı olduğu için silinemez.");
+        }
+        tournamentRepository.delete(tournament);
+    }
+
+    @Transactional
+    public Long deleteTeam(Long teamId) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new IllegalArgumentException("Takım bulunamadı."));
+        Long tournamentId = team.getTournament().getId();
+        if (matchRepository.countByHomeTeamIdOrAwayTeamId(team.getId(), team.getId()) > 0) {
+            throw new IllegalStateException("Bu takım maçlarda kullanıldığı için silinemez.");
+        }
+        teamRepository.delete(team);
+        return tournamentId;
+    }
+
+    @Transactional
+    public Long deleteMatch(Long matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("Maç bulunamadı."));
+        Long tournamentId = match.getTournament().getId();
+        if (predictionRepository.countByMatchId(match.getId()) > 0) {
+            throw new IllegalStateException("Bu maç için tahmin olduğu için silinemez.");
+        }
+        if (bracketRuleRepository.countByTargetMatchId(match.getId()) > 0) {
+            throw new IllegalStateException("Bu maç eşleşme kurallarında kullanıldığı için silinemez.");
+        }
+        matchRepository.delete(match);
+        return tournamentId;
+    }
+
+    @Transactional
+    public Long deleteBracketRule(Long ruleId) {
+        BracketRule rule = bracketRuleRepository.findById(ruleId)
+                .orElseThrow(() -> new IllegalArgumentException("Eşleşme kuralı bulunamadı."));
+        Long tournamentId = rule.getTournament().getId();
+        bracketRuleRepository.delete(rule);
+        return tournamentId;
     }
 
     private Tournament getTournament(Long tournamentId) {

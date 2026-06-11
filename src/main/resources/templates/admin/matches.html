@@ -8,14 +8,17 @@
 
     <div class="page-header">
         <h1>Maçlar</h1>
-        <form th:if="${!#lists.isEmpty(tournaments)}" th:action="@{/admin/matches}" method="get">
-            <select name="tournamentId" onchange="this.form.submit()">
-                <option th:each="tournament : ${tournaments}"
-                        th:value="${tournament.id}"
-                        th:selected="${selectedTournament != null and selectedTournament.id == tournament.id}"
-                        th:text="|${tournament.name} ${tournament.season}|"></option>
-            </select>
-        </form>
+        <div class="actions">
+            <a th:href="@{/admin}">Yönetim paneline dön</a>
+            <form th:if="${!#lists.isEmpty(tournaments)}" th:action="@{/admin/matches}" method="get">
+                <select name="tournamentId" onchange="this.form.submit()">
+                    <option th:each="tournament : ${tournaments}"
+                            th:value="${tournament.id}"
+                            th:selected="${selectedTournament != null and selectedTournament.id == tournament.id}"
+                            th:text="|${tournament.name} ${tournament.season}|"></option>
+                </select>
+            </form>
+        </div>
     </div>
 
     <div th:if="${selectedTournament == null}" class="surface">
@@ -113,7 +116,16 @@
             <td th:text="${match.homeTeam != null ? match.homeTeam.name : (match.placeholderHome != null ? match.placeholderHome : 'Belirlenecek')}"></td>
             <td th:text="${match.awayTeam != null ? match.awayTeam.name : (match.placeholderAway != null ? match.placeholderAway : 'Belirlenecek')}"></td>
             <td th:text="${@uiLabels.matchStatus(match.status)}"></td>
-            <td><a th:href="@{/admin/matches(tournamentId=${selectedTournament.id},editId=${match.id})}">Düzenle</a></td>
+            <td>
+                <div class="actions">
+                    <a th:href="@{/admin/matches(tournamentId=${selectedTournament.id},editId=${match.id})}">Düzenle</a>
+                    <form class="inline-form" th:action="@{/admin/matches/{id}/delete(id=${match.id})}" method="post" onsubmit="return confirm('Silmek istediğinize emin misiniz?')">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" name="tournamentId" th:value="${selectedTournament.id}">
+                        <button class="link-button danger-link" type="submit">Sil</button>
+                    </form>
+                </div>
+            </td>
         </tr>
         <tr th:if="${#lists.isEmpty(matches)}">
             <td colspan="7">Henüz maç yok.</td>

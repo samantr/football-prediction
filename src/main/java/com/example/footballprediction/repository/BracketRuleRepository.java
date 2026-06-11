@@ -9,6 +9,10 @@ import java.util.List;
 
 public interface BracketRuleRepository extends JpaRepository<BracketRule, Long> {
 
+    long countByTournamentId(Long tournamentId);
+
+    long countByTargetMatchId(Long targetMatchId);
+
     @Query("""
             select r
             from BracketRule r

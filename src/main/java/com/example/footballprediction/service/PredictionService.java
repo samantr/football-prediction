@@ -46,7 +46,7 @@ public class PredictionService {
                 .orElseThrow(() -> new IllegalArgumentException("Maç bulunamadı."));
 
         if (!canEditPrediction(match)) {
-            throw new IllegalStateException("Bu maç için tahmin düzenleme kapalı.");
+            throw new IllegalStateException("Tahmin süresi doldu.");
         }
 
         User user = userRepository.findById(userId)

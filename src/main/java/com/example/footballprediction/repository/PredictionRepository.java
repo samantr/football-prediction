@@ -12,6 +12,16 @@ public interface PredictionRepository extends JpaRepository<Prediction, Long> {
 
     Optional<Prediction> findByUserIdAndMatchId(Long userId, Long matchId);
 
+    long countByMatchId(Long matchId);
+
+    @Query("""
+            select count(p)
+            from Prediction p
+            join p.match m
+            where m.tournament.id = :tournamentId
+            """)
+    long countByMatchTournamentId(@Param("tournamentId") Long tournamentId);
+
     @Query("""
             select p
             from Prediction p

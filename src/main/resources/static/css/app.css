@@ -191,6 +191,15 @@ button:hover,
     text-decoration: none;
 }
 
+.danger-button {
+    background: var(--danger);
+    border-color: var(--danger);
+}
+
+.danger-button:hover {
+    background: #842727;
+}
+
 button:disabled {
     background: #aab3bd;
     border-color: #aab3bd;
@@ -203,6 +212,10 @@ button:disabled {
     color: var(--accent-dark);
     min-height: auto;
     padding: 0;
+}
+
+.danger-link {
+    color: var(--danger);
 }
 
 .muted {

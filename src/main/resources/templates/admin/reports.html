@@ -8,14 +8,17 @@
 
     <div class="page-header">
         <h1>Raporlar</h1>
-        <form th:if="${!#lists.isEmpty(tournaments)}" th:action="@{/admin/reports}" method="get">
-            <select name="tournamentId" onchange="this.form.submit()">
-                <option th:each="tournament : ${tournaments}"
-                        th:value="${tournament.id}"
-                        th:selected="${selectedTournament != null and selectedTournament.id == tournament.id}"
-                        th:text="|${tournament.name} ${tournament.season}|"></option>
-            </select>
-        </form>
+        <div class="actions">
+            <a th:href="@{/admin}">Yönetim paneline dön</a>
+            <form th:if="${!#lists.isEmpty(tournaments)}" th:action="@{/admin/reports}" method="get">
+                <select name="tournamentId" onchange="this.form.submit()">
+                    <option th:each="tournament : ${tournaments}"
+                            th:value="${tournament.id}"
+                            th:selected="${selectedTournament != null and selectedTournament.id == tournament.id}"
+                            th:text="|${tournament.name} ${tournament.season}|"></option>
+                </select>
+            </form>
+        </div>
     </div>
 
     <section class="surface">

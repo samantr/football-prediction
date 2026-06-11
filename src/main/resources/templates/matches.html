@@ -25,6 +25,10 @@
         Henüz turnuva yok.
     </div>
 
+    <p th:if="${selectedTournament != null}" class="muted">
+        Tahminler maç başlangıcından 1 saat öncesine kadar düzenlenebilir.
+    </p>
+
     <table th:if="${selectedTournament != null}">
         <thead>
         <tr>
@@ -65,7 +69,7 @@
                            th:value="${prediction != null ? prediction.predictedAwayScore : ''}"
                            th:disabled="${!editable}" required>
                     <button type="submit" th:disabled="${!editable}">Kaydet</button>
-                    <span th:if="${!editable}" class="muted">Kilitli</span>
+                    <span th:if="${!editable}" class="muted">Tahmin süresi doldu</span>
                 </form>
             </td>
         </tr>

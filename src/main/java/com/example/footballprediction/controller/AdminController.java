@@ -13,6 +13,8 @@ import com.example.footballprediction.repository.BracketRuleRepository;
 import com.example.footballprediction.repository.MatchRepository;
 import com.example.footballprediction.repository.TeamRepository;
 import com.example.footballprediction.repository.UserRepository;
+import com.example.footballprediction.service.AdminCleanupResult;
+import com.example.footballprediction.service.AdminCleanupService;
 import com.example.footballprediction.service.AdminDataService;
 import com.example.footballprediction.service.BracketGenerationResult;
 import com.example.footballprediction.service.BracketService;
@@ -40,6 +42,7 @@ public class AdminController {
     private static final DateTimeFormatter DATETIME_LOCAL = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
     private final TournamentService tournamentService;
+    private final AdminCleanupService adminCleanupService;
     private final AdminDataService adminDataService;
     private final ScoringService scoringService;
     private final BracketService bracketService;
@@ -50,6 +53,7 @@ public class AdminController {
 
     public AdminController(
             TournamentService tournamentService,
+            AdminCleanupService adminCleanupService,
             AdminDataService adminDataService,
             ScoringService scoringService,
             BracketService bracketService,
@@ -59,6 +63,7 @@ public class AdminController {
             BracketRuleRepository bracketRuleRepository
     ) {
         this.tournamentService = tournamentService;
+        this.adminCleanupService = adminCleanupService;
         this.adminDataService = adminDataService;
         this.scoringService = scoringService;
         this.bracketService = bracketService;
@@ -110,6 +115,17 @@ public class AdminController {
         return "redirect:/admin/tournaments";
     }
 
+    @PostMapping("/tournaments/{id}/delete")
+    public String deleteTournament(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            adminDataService.deleteTournament(id);
+            redirectAttributes.addFlashAttribute("success", "Turnuva silindi.");
+        } catch (IllegalArgumentException | IllegalStateException | DataIntegrityViolationException ex) {
+            addError(redirectAttributes, ex);
+        }
+        return "redirect:/admin/tournaments";
+    }
+
     @GetMapping("/teams")
     public String teams(
             @RequestParam(required = false) Long tournamentId,
@@ -148,6 +164,22 @@ public class AdminController {
             addError(redirectAttributes, ex);
         }
         return redirectToAdmin("teams", tournamentId);
+    }
+
+    @PostMapping("/teams/{id}/delete")
+    public String deleteTeam(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long tournamentId,
+            RedirectAttributes redirectAttributes
+    ) {
+        Long redirectTournamentId = tournamentId;
+        try {
+            redirectTournamentId = adminDataService.deleteTeam(id);
+            redirectAttributes.addFlashAttribute("success", "Takım silindi.");
+        } catch (IllegalArgumentException | IllegalStateException | DataIntegrityViolationException ex) {
+            addError(redirectAttributes, ex);
+        }
+        return redirectToAdmin("teams", redirectTournamentId);
     }
 
     @GetMapping("/matches")
@@ -215,6 +247,22 @@ public class AdminController {
         return redirectToAdmin("matches", tournamentId);
     }
 
+    @PostMapping("/matches/{id}/delete")
+    public String deleteMatch(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long tournamentId,
+            RedirectAttributes redirectAttributes
+    ) {
+        Long redirectTournamentId = tournamentId;
+        try {
+            redirectTournamentId = adminDataService.deleteMatch(id);
+            redirectAttributes.addFlashAttribute("success", "Maç silindi.");
+        } catch (IllegalArgumentException | IllegalStateException | DataIntegrityViolationException ex) {
+            addError(redirectAttributes, ex);
+        }
+        return redirectToAdmin("matches", redirectTournamentId);
+    }
+
     @GetMapping("/results")
     public String results(@RequestParam(required = false) Long tournamentId, Model model) {
         Tournament selectedTournament = tournamentService.findSelectedTournament(tournamentId);
@@ -259,6 +307,19 @@ public class AdminController {
         model.addAttribute("users", userRepository.findByRoleOrderByDisplayNameAsc(Role.USER));
         model.addAttribute("matches", selectedTournamentId == null ? List.of() : matchRepository.findByTournamentIdOrderByKickoffAtAscMatchNoAsc(selectedTournamentId));
         return "admin/reports";
+    }
+
+    @GetMapping("/cleanup")
+    public String cleanup() {
+        return "admin/cleanup";
+    }
+
+    @PostMapping("/cleanup")
+    public String cleanTestData(RedirectAttributes redirectAttributes) {
+        AdminCleanupResult result = adminCleanupService.cleanTestData();
+        redirectAttributes.addFlashAttribute("success", "Test verileri temizlendi.");
+        redirectAttributes.addFlashAttribute("messages", result.toMessages());
+        return "redirect:/admin/cleanup";
     }
 
     @GetMapping("/generate-next-round")
@@ -306,6 +367,22 @@ public class AdminController {
             addError(redirectAttributes, ex);
         }
         return redirectToAdmin("generate-next-round", tournamentId);
+    }
+
+    @PostMapping("/generate-next-round/rules/{id}/delete")
+    public String deleteBracketRule(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long tournamentId,
+            RedirectAttributes redirectAttributes
+    ) {
+        Long redirectTournamentId = tournamentId;
+        try {
+            redirectTournamentId = adminDataService.deleteBracketRule(id);
+            redirectAttributes.addFlashAttribute("success", "Eşleşme kuralı silindi.");
+        } catch (IllegalArgumentException | IllegalStateException | DataIntegrityViolationException ex) {
+            addError(redirectAttributes, ex);
+        }
+        return redirectToAdmin("generate-next-round", redirectTournamentId);
     }
 
     @PostMapping("/generate-next-round")
