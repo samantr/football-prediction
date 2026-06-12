@@ -5,7 +5,9 @@ import com.example.footballprediction.domain.Prediction;
 import com.example.footballprediction.domain.Tournament;
 import com.example.footballprediction.domain.User;
 import com.example.footballprediction.repository.MatchRepository;
+import com.example.footballprediction.service.PredictionResultClassification;
 import com.example.footballprediction.service.PredictionService;
+import com.example.footballprediction.service.ScoringService;
 import com.example.footballprediction.service.TournamentService;
 import com.example.footballprediction.service.UserService;
 import org.springframework.security.core.Authentication;
@@ -27,17 +29,20 @@ public class MatchController {
     private final TournamentService tournamentService;
     private final MatchRepository matchRepository;
     private final PredictionService predictionService;
+    private final ScoringService scoringService;
     private final UserService userService;
 
     public MatchController(
             TournamentService tournamentService,
             MatchRepository matchRepository,
             PredictionService predictionService,
+            ScoringService scoringService,
             UserService userService
     ) {
         this.tournamentService = tournamentService;
         this.matchRepository = matchRepository;
         this.predictionService = predictionService;
+        this.scoringService = scoringService;
         this.userService = userService;
     }
 
@@ -59,12 +64,15 @@ public class MatchController {
                 : predictionService.findPredictionMapForUser(user.getId(), selectedTournamentId);
         Map<Long, Boolean> editableByMatchId = matches.stream()
                 .collect(Collectors.toMap(Match::getId, predictionService::canEditPrediction));
+        Map<Long, PredictionResultClassification> classificationByMatchId = predictionsByMatchId.values().stream()
+                .collect(Collectors.toMap(prediction -> prediction.getMatch().getId(), scoringService::classify));
 
         model.addAttribute("tournaments", tournamentService.findAll());
         model.addAttribute("selectedTournament", selectedTournament);
         model.addAttribute("matches", matches);
         model.addAttribute("predictionsByMatchId", predictionsByMatchId);
         model.addAttribute("editableByMatchId", editableByMatchId);
+        model.addAttribute("classificationByMatchId", classificationByMatchId);
         return "matches";
     }
 

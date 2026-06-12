@@ -10,12 +10,20 @@ public class PredictionScoreRow {
     private final Match match;
     private final Prediction prediction;
     private final int score;
+    private final PredictionResultClassification classification;
 
-    public PredictionScoreRow(User user, Match match, Prediction prediction, int score) {
+    public PredictionScoreRow(
+            User user,
+            Match match,
+            Prediction prediction,
+            int score,
+            PredictionResultClassification classification
+    ) {
         this.user = user;
         this.match = match;
         this.prediction = prediction;
         this.score = score;
+        this.classification = classification;
     }
 
     public User getUser() {
@@ -32,5 +40,9 @@ public class PredictionScoreRow {
 
     public int getScore() {
         return score;
+    }
+
+    public PredictionResultClassification getClassification() {
+        return classification;
     }
 }

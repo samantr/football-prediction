@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,7 +34,7 @@ public class PredictionService {
 
     public boolean canEditPrediction(Match match) {
         return match.getKickoffAt() != null
-                && LocalDateTime.now().isBefore(match.getKickoffAt().minusHours(1));
+                && LocalDateTime.now(ZoneOffset.UTC).isBefore(match.getKickoffAt().minusHours(1));
     }
 
     @Transactional
@@ -54,6 +55,7 @@ public class PredictionService {
 
         Prediction prediction = predictionRepository.findByUserIdAndMatchId(userId, matchId)
                 .orElseGet(Prediction::new);
+        requireOwner(userId, prediction);
         prediction.setUser(user);
         prediction.setMatch(match);
         prediction.setPredictedHomeScore(homeScore);
@@ -69,5 +71,29 @@ public class PredictionService {
 
         return predictions.stream()
                 .collect(Collectors.toMap(prediction -> prediction.getMatch().getId(), prediction -> prediction));
+    }
+
+    @Transactional
+    public void deletePrediction(Long currentUserId, Long predictionId, boolean admin) {
+        Prediction prediction = predictionRepository.findById(predictionId)
+                .orElseThrow(() -> new IllegalArgumentException("Tahmin bulunamadı."));
+
+        if (!admin) {
+            requireOwner(currentUserId, prediction);
+            if (!canEditPrediction(prediction.getMatch())) {
+                throw new IllegalStateException("Tahmin süresi doldu.");
+            }
+        }
+
+        predictionRepository.delete(prediction);
+    }
+
+    private void requireOwner(Long userId, Prediction prediction) {
+        if (prediction.getId() == null) {
+            return;
+        }
+        if (prediction.getUser() == null || !userId.equals(prediction.getUser().getId())) {
+            throw new IllegalStateException("Bu tahmini düzenleme yetkiniz yok.");
+        }
     }
 }

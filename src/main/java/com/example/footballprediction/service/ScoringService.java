@@ -1,5 +1,7 @@
 package com.example.footballprediction.service;
 
+import com.example.footballprediction.domain.Match;
+import com.example.footballprediction.domain.MatchStage;
 import com.example.footballprediction.domain.MatchStatus;
 import com.example.footballprediction.domain.Prediction;
 import com.example.footballprediction.domain.Role;
@@ -18,6 +20,11 @@ import java.util.Map;
 @Service
 public class ScoringService {
 
+    public static final int GROUP_EXACT_SCORE_POINTS = 3;
+    public static final int GROUP_CORRECT_OUTCOME_POINTS = 1;
+    public static final int ELIMINATION_EXACT_SCORE_POINTS = 4;
+    public static final int ELIMINATION_CORRECT_OUTCOME_POINTS = 2;
+
     private final UserRepository userRepository;
     private final PredictionRepository predictionRepository;
 
@@ -27,23 +34,31 @@ public class ScoringService {
     }
 
     public int calculateScore(Prediction prediction) {
+        return pointsFor(prediction, classify(prediction));
+    }
+
+    public PredictionResultClassification classify(Prediction prediction) {
         if (prediction == null
                 || prediction.getMatch() == null
                 || prediction.getMatch().getStatus() != MatchStatus.COMPLETED
                 || prediction.getMatch().getHomeScore() == null
-                || prediction.getMatch().getAwayScore() == null) {
-            return 0;
+                || prediction.getMatch().getAwayScore() == null
+                || prediction.getPredictedHomeScore() == null
+                || prediction.getPredictedAwayScore() == null) {
+            return PredictionResultClassification.PENDING;
         }
 
         boolean exactScore = prediction.getPredictedHomeScore().equals(prediction.getMatch().getHomeScore())
                 && prediction.getPredictedAwayScore().equals(prediction.getMatch().getAwayScore());
         if (exactScore) {
-            return 3;
+            return PredictionResultClassification.EXACT_SCORE;
         }
 
         int predictedOutcome = Integer.compare(prediction.getPredictedHomeScore(), prediction.getPredictedAwayScore());
         int actualOutcome = Integer.compare(prediction.getMatch().getHomeScore(), prediction.getMatch().getAwayScore());
-        return predictedOutcome == actualOutcome ? 1 : 0;
+        return predictedOutcome == actualOutcome
+                ? PredictionResultClassification.CORRECT_OUTCOME
+                : PredictionResultClassification.WRONG;
     }
 
     @Transactional(readOnly = true)
@@ -64,12 +79,13 @@ public class ScoringService {
                 continue;
             }
 
-            int points = calculateScore(prediction);
+            PredictionResultClassification classification = classify(prediction);
+            int points = pointsFor(prediction, classification);
             score.totalScore += points;
             score.predictionsCount++;
-            if (points == 3) {
+            if (classification == PredictionResultClassification.EXACT_SCORE) {
                 score.exactScores++;
-            } else if (points == 1) {
+            } else if (classification == PredictionResultClassification.CORRECT_OUTCOME) {
                 score.outcomeScores++;
             }
         }
@@ -89,12 +105,7 @@ public class ScoringService {
                 : predictionRepository.findByUserIdAndMatchTournamentIdOrderByMatchKickoffAtAsc(userId, tournamentId);
 
         return predictions.stream()
-                .map(prediction -> new PredictionScoreRow(
-                        prediction.getUser(),
-                        prediction.getMatch(),
-                        prediction,
-                        calculateScore(prediction)
-                ))
+                .map(this::toScoreRow)
                 .toList();
     }
 
@@ -106,18 +117,40 @@ public class ScoringService {
 
         List<PredictionScoreRow> rows = new ArrayList<>();
         for (Prediction prediction : predictions) {
-            rows.add(new PredictionScoreRow(
-                    prediction.getUser(),
-                    prediction.getMatch(),
-                    prediction,
-                    calculateScore(prediction)
-            ));
+            rows.add(toScoreRow(prediction));
         }
         return rows;
     }
 
     public int totalScore(List<PredictionScoreRow> rows) {
         return rows.stream().mapToInt(PredictionScoreRow::getScore).sum();
+    }
+
+    private PredictionScoreRow toScoreRow(Prediction prediction) {
+        PredictionResultClassification classification = classify(prediction);
+        return new PredictionScoreRow(
+                prediction.getUser(),
+                prediction.getMatch(),
+                prediction,
+                pointsFor(prediction, classification),
+                classification
+        );
+    }
+
+    private int pointsFor(Prediction prediction, PredictionResultClassification classification) {
+        return switch (classification) {
+            case EXACT_SCORE -> isGroupStage(prediction.getMatch())
+                    ? GROUP_EXACT_SCORE_POINTS
+                    : ELIMINATION_EXACT_SCORE_POINTS;
+            case CORRECT_OUTCOME -> isGroupStage(prediction.getMatch())
+                    ? GROUP_CORRECT_OUTCOME_POINTS
+                    : ELIMINATION_CORRECT_OUTCOME_POINTS;
+            case WRONG, PENDING -> 0;
+        };
+    }
+
+    private boolean isGroupStage(Match match) {
+        return match == null || match.getStage() == null || match.getStage() == MatchStage.GROUP;
     }
 
     private static class MutableScore {

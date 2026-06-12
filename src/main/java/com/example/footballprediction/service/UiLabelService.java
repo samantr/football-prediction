@@ -55,4 +55,28 @@ public class UiLabelService {
             case MATCH_LOSER -> "Maç mağlubu";
         };
     }
+
+    public String predictionResultClass(PredictionResultClassification classification) {
+        if (classification == null) {
+            return "prediction-pending";
+        }
+        return switch (classification) {
+            case EXACT_SCORE -> "prediction-exact";
+            case CORRECT_OUTCOME -> "prediction-outcome";
+            case WRONG -> "prediction-wrong";
+            case PENDING -> "prediction-pending";
+        };
+    }
+
+    public String predictionResultLabel(PredictionResultClassification classification) {
+        if (classification == null) {
+            return "Bekliyor";
+        }
+        return switch (classification) {
+            case EXACT_SCORE -> "Tam skor";
+            case CORRECT_OUTCOME -> "Doğru sonuç";
+            case WRONG -> "Yanlış";
+            case PENDING -> "Bekliyor";
+        };
+    }
 }

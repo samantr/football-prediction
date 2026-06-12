@@ -50,7 +50,7 @@
                     <input id="groupCode" name="groupCode" th:value="${editMatch.groupCode}">
                 </p>
                 <p>
-                    <label for="kickoffAt">Başlama</label>
+                    <label for="kickoffAt">Başlama (TRT)</label>
                     <input id="kickoffAt" type="datetime-local" name="kickoffAt" th:value="${editKickoffAt}" required>
                 </p>
                 <p>
@@ -100,7 +100,7 @@
         <thead>
         <tr>
             <th>No</th>
-            <th>Başlama</th>
+            <th>Başlama (TRT)</th>
             <th>Aşama</th>
             <th>Ev sahibi</th>
             <th>Deplasman</th>
@@ -111,7 +111,7 @@
         <tbody>
         <tr th:each="match : ${matches}">
             <td th:text="${match.matchNo}"></td>
-            <td class="nowrap" th:text="${#temporals.format(match.kickoffAt, 'yyyy-MM-dd HH:mm')}"></td>
+            <td class="nowrap" th:text="${@matchTimes.formatTurkiye(match.kickoffAt)}"></td>
             <td th:text="${@uiLabels.matchStage(match.stage)}"></td>
             <td th:text="${match.homeTeam != null ? match.homeTeam.name : (match.placeholderHome != null ? match.placeholderHome : 'Belirlenecek')}"></td>
             <td th:text="${match.awayTeam != null ? match.awayTeam.name : (match.placeholderAway != null ? match.placeholderAway : 'Belirlenecek')}"></td>

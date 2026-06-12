@@ -130,6 +130,22 @@ th {
     font-weight: 700;
 }
 
+tr.prediction-exact td {
+    background: #e7f6ec;
+}
+
+tr.prediction-outcome td {
+    background: #fff4cc;
+}
+
+tr.prediction-wrong td {
+    background: #fae8e8;
+}
+
+tr.prediction-pending td {
+    background: inherit;
+}
+
 .actions {
     display: flex;
     flex-wrap: wrap;
@@ -145,6 +161,21 @@ th {
     display: grid;
     gap: 12px;
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.filter-grid {
+    align-items: end;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.table-tools {
+    margin-bottom: 12px;
+}
+
+.tool-actions {
+    margin: 0;
 }
 
 label {
@@ -235,6 +266,13 @@ button:disabled {
 .error {
     background: var(--error-bg);
     color: var(--danger);
+}
+
+.field-error {
+    color: var(--danger);
+    display: block;
+    font-size: 14px;
+    margin-top: 4px;
 }
 
 .neutral {

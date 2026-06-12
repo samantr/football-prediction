@@ -46,9 +46,46 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı."));
     }
 
+    @Transactional
+    public void changePasswordForCurrentUser(String email, String currentPassword, String newPassword) {
+        User user = getByEmail(email);
+        String normalizedCurrentPassword = requirePasswordText(
+                currentPassword,
+                "currentPassword",
+                "Current password is required."
+        );
+        String normalizedNewPassword = requirePasswordText(
+                newPassword,
+                "newPassword",
+                "New password is required."
+        );
+
+        if (normalizedNewPassword.length() < 8) {
+            throw new ChangePasswordException("newPassword", "New password should be at least 8 characters.");
+        }
+
+        if (!passwordEncoder.matches(normalizedCurrentPassword, user.getPasswordHash())) {
+            throw new ChangePasswordException("currentPassword", "Current password is incorrect.");
+        }
+
+        if (passwordEncoder.matches(normalizedNewPassword, user.getPasswordHash())) {
+            throw new ChangePasswordException("newPassword", "New password must not be the same as the current password.");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(normalizedNewPassword));
+        userRepository.save(user);
+    }
+
     private String requireText(String value, String label) {
         if (value == null || value.trim().isEmpty()) {
             throw new IllegalArgumentException(label + " zorunludur.");
+        }
+        return value.trim();
+    }
+
+    private String requirePasswordText(String value, String field, String message) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new ChangePasswordException(field, message);
         }
         return value.trim();
     }

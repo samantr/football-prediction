@@ -48,7 +48,7 @@
             <thead>
             <tr>
                 <th>No</th>
-                <th>Başlama</th>
+                <th>Başlama (TRT)</th>
                 <th>Aşama</th>
                 <th>Maç</th>
                 <th>Sonuç</th>
@@ -57,7 +57,7 @@
             <tbody>
             <tr th:each="match : ${matches}">
                 <td th:text="${match.matchNo}"></td>
-                <td class="nowrap" th:text="${#temporals.format(match.kickoffAt, 'yyyy-MM-dd HH:mm')}"></td>
+                <td class="nowrap" th:text="${@matchTimes.formatTurkiye(match.kickoffAt)}"></td>
                 <td th:text="${@uiLabels.matchStage(match.stage)}"></td>
                 <td>
                     <span th:text="${match.homeTeam != null ? match.homeTeam.name : (match.placeholderHome != null ? match.placeholderHome : 'Belirlenecek')}"></span>
@@ -116,7 +116,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="row : ${rows}">
+            <tr th:each="row : ${rows}" th:classappend="${@uiLabels.predictionResultClass(row.classification)}">
                 <td th:text="${row.user.displayName}"></td>
                 <td>
                     <span th:text="|#${row.match.matchNo} |"></span>

@@ -18,6 +18,7 @@ import com.example.footballprediction.service.AdminCleanupService;
 import com.example.footballprediction.service.AdminDataService;
 import com.example.footballprediction.service.BracketGenerationResult;
 import com.example.footballprediction.service.BracketService;
+import com.example.footballprediction.service.MatchTimeService;
 import com.example.footballprediction.service.PredictionScoreRow;
 import com.example.footballprediction.service.ScoringService;
 import com.example.footballprediction.service.TournamentService;
@@ -32,20 +33,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
 
-    private static final DateTimeFormatter DATETIME_LOCAL = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
-
     private final TournamentService tournamentService;
     private final AdminCleanupService adminCleanupService;
     private final AdminDataService adminDataService;
     private final ScoringService scoringService;
     private final BracketService bracketService;
+    private final MatchTimeService matchTimeService;
     private final TeamRepository teamRepository;
     private final MatchRepository matchRepository;
     private final UserRepository userRepository;
@@ -57,6 +56,7 @@ public class AdminController {
             AdminDataService adminDataService,
             ScoringService scoringService,
             BracketService bracketService,
+            MatchTimeService matchTimeService,
             TeamRepository teamRepository,
             MatchRepository matchRepository,
             UserRepository userRepository,
@@ -67,6 +67,7 @@ public class AdminController {
         this.adminDataService = adminDataService;
         this.scoringService = scoringService;
         this.bracketService = bracketService;
+        this.matchTimeService = matchTimeService;
         this.teamRepository = teamRepository;
         this.matchRepository = matchRepository;
         this.userRepository = userRepository;
@@ -414,11 +415,11 @@ public class AdminController {
         if (value == null || value.trim().isEmpty()) {
             throw new IllegalArgumentException("Başlama zamanı zorunludur.");
         }
-        return LocalDateTime.parse(value.trim());
+        return matchTimeService.parseTurkiyeInputToStoredUtc(value);
     }
 
     private String formatDateTime(LocalDateTime value) {
-        return value == null ? "" : value.format(DATETIME_LOCAL);
+        return matchTimeService.formatTurkiyeInput(value);
     }
 
     private void addError(RedirectAttributes redirectAttributes, Exception ex) {

@@ -29,7 +29,7 @@
         <thead>
         <tr>
             <th>No</th>
-            <th>Başlama</th>
+            <th>Başlama (TRT)</th>
             <th>Maç</th>
             <th>Mevcut</th>
             <th>Sonuç gir</th>
@@ -38,7 +38,7 @@
         <tbody>
         <tr th:each="match : ${matches}">
             <td th:text="${match.matchNo}"></td>
-            <td class="nowrap" th:text="${#temporals.format(match.kickoffAt, 'yyyy-MM-dd HH:mm')}"></td>
+            <td class="nowrap" th:text="${@matchTimes.formatTurkiye(match.kickoffAt)}"></td>
             <td>
                 <span th:text="${match.homeTeam != null ? match.homeTeam.name : (match.placeholderHome != null ? match.placeholderHome : 'Belirlenecek')}"></span>
                 <span> - </span>

@@ -25,7 +25,7 @@
         <thead>
         <tr>
             <th>No</th>
-            <th>Başlama</th>
+            <th>Başlama (TRT)</th>
             <th>Maç</th>
             <th>Tahmin</th>
             <th>Sonuç</th>
@@ -33,9 +33,9 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:each="row : ${rows}">
+        <tr th:each="row : ${rows}" th:classappend="${@uiLabels.predictionResultClass(row.classification)}">
             <td th:text="${row.match.matchNo}"></td>
-            <td class="nowrap" th:text="${#temporals.format(row.match.kickoffAt, 'yyyy-MM-dd HH:mm')}"></td>
+            <td class="nowrap" th:text="${@matchTimes.formatTurkiye(row.match.kickoffAt)}"></td>
             <td>
                 <span th:text="${row.match.homeTeam != null ? row.match.homeTeam.name : (row.match.placeholderHome != null ? row.match.placeholderHome : 'Belirlenecek')}"></span>
                 <span> - </span>
@@ -53,6 +53,87 @@
         </tr>
         </tbody>
     </table>
+
+    <h2 th:if="${selectedTournament != null}">Tüm Tahminler</h2>
+    <div th:if="${selectedTournament != null}" class="table-tools" data-prediction-tools>
+        <div class="filter-grid">
+            <p>
+                <label for="predictionFilterUser">Kullanıcı</label>
+                <input id="predictionFilterUser" type="search" data-prediction-filter="user">
+            </p>
+            <p>
+                <label for="predictionFilterMatch">Maç / takım</label>
+                <input id="predictionFilterMatch" type="search" data-prediction-filter="match">
+            </p>
+            <p>
+                <label for="predictionFilterResult">Sonuç durumu</label>
+                <input id="predictionFilterResult" type="search" data-prediction-filter="result">
+            </p>
+            <p>
+                <label for="predictionSortField">Sırala</label>
+                <select id="predictionSortField" data-prediction-sort-field>
+                    <option value="kickoff">Başlama</option>
+                    <option value="user">Kullanıcı</option>
+                    <option value="no">No</option>
+                    <option value="match">Maç</option>
+                    <option value="score">Puan</option>
+                </select>
+            </p>
+            <p>
+                <label for="predictionSortDirection">Yön</label>
+                <select id="predictionSortDirection" data-prediction-sort-direction>
+                    <option value="asc">Artan</option>
+                    <option value="desc">Azalan</option>
+                </select>
+            </p>
+            <p class="tool-actions">
+                <button type="button" data-prediction-reset>Temizle</button>
+            </p>
+        </div>
+    </div>
+    <table th:if="${selectedTournament != null}" data-predictions-table>
+        <thead>
+        <tr>
+            <th>Kullanıcı</th>
+            <th>No</th>
+            <th>Başlama (TRT)</th>
+            <th>Maç</th>
+            <th>Tahmin</th>
+            <th>Sonuç</th>
+            <th>Puan</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row : ${readOnlyRows}"
+            th:classappend="${@uiLabels.predictionResultClass(row.classification)}"
+            data-prediction-row
+            th:data-user="${row.user.displayName}"
+            th:data-no="${row.match.matchNo}"
+            th:data-kickoff="${row.match.kickoffAt}"
+            th:data-score="${row.score}"
+            th:data-result="|${@uiLabels.predictionResultLabel(row.classification)} ${row.classification}|"
+            th:data-match="|${row.match.homeTeam != null ? row.match.homeTeam.name : (row.match.placeholderHome != null ? row.match.placeholderHome : 'Belirlenecek')} ${row.match.awayTeam != null ? row.match.awayTeam.name : (row.match.placeholderAway != null ? row.match.placeholderAway : 'Belirlenecek')}|">
+            <td th:text="${row.user.displayName}"></td>
+            <td th:text="${row.match.matchNo}"></td>
+            <td class="nowrap" th:text="${@matchTimes.formatTurkiye(row.match.kickoffAt)}"></td>
+            <td>
+                <span th:text="${row.match.homeTeam != null ? row.match.homeTeam.name : (row.match.placeholderHome != null ? row.match.placeholderHome : 'Belirlenecek')}"></span>
+                <span> - </span>
+                <span th:text="${row.match.awayTeam != null ? row.match.awayTeam.name : (row.match.placeholderAway != null ? row.match.placeholderAway : 'Belirlenecek')}"></span>
+            </td>
+            <td th:text="|${row.prediction.predictedHomeScore} - ${row.prediction.predictedAwayScore}|"></td>
+            <td>
+                <span th:if="${row.match.homeScore != null and row.match.awayScore != null}" th:text="|${row.match.homeScore} - ${row.match.awayScore}|"></span>
+                <span th:unless="${row.match.homeScore != null and row.match.awayScore != null}" class="muted">Bekliyor</span>
+            </td>
+            <td th:text="${row.score}"></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(readOnlyRows)}" data-empty-row>
+            <td colspan="7">Henüz tahmin yok.</td>
+        </tr>
+        </tbody>
+    </table>
 </main>
+<script th:src="@{/js/predictions-table.js}"></script>
 </body>
 </html>
