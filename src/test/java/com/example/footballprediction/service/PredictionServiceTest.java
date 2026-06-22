@@ -1,8 +1,10 @@
 package com.example.footballprediction.service;
 
 import com.example.footballprediction.domain.Match;
+import com.example.footballprediction.domain.MatchStage;
 import com.example.footballprediction.domain.Prediction;
 import com.example.footballprediction.domain.Role;
+import com.example.footballprediction.domain.TargetSide;
 import com.example.footballprediction.domain.User;
 import com.example.footballprediction.repository.MatchRepository;
 import com.example.footballprediction.repository.PredictionRepository;
@@ -82,6 +84,36 @@ class PredictionServiceTest {
         ArgumentCaptor<Prediction> predictionCaptor = ArgumentCaptor.forClass(Prediction.class);
         verify(predictionRepository).save(predictionCaptor.capture());
         assertThat(predictionCaptor.getValue().getUser().getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void rejectsTiedEliminationPredictionWithoutPenaltyWinner() {
+        Match match = match(10L, LocalDateTime.now(ZoneOffset.UTC).plusHours(2));
+        match.setStage(MatchStage.FINAL);
+        when(matchRepository.findById(10L)).thenReturn(Optional.of(match));
+
+        assertThatThrownBy(() -> predictionService.savePrediction(1L, 10L, 1, 1, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("penalt");
+
+        verify(predictionRepository, never()).save(any(Prediction.class));
+    }
+
+    @Test
+    void storesPenaltyWinnerOnlyForTiedEliminationPredictions() {
+        User user = user(1L);
+        Match match = match(10L, LocalDateTime.now(ZoneOffset.UTC).plusHours(2));
+        match.setStage(MatchStage.FINAL);
+        when(matchRepository.findById(10L)).thenReturn(Optional.of(match));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(predictionRepository.findByUserIdAndMatchId(1L, 10L)).thenReturn(Optional.empty());
+        when(predictionRepository.save(any(Prediction.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Prediction tiedPrediction = predictionService.savePrediction(1L, 10L, 1, 1, TargetSide.HOME);
+        Prediction nonTiedPrediction = predictionService.savePrediction(1L, 10L, 2, 1, TargetSide.AWAY);
+
+        assertThat(tiedPrediction.getPredictedPenaltyWinner()).isEqualTo(TargetSide.HOME);
+        assertThat(nonTiedPrediction.getPredictedPenaltyWinner()).isNull();
     }
 
     @Test

@@ -1,7 +1,9 @@
 package com.example.footballprediction.service;
 
 import com.example.footballprediction.domain.Match;
+import com.example.footballprediction.domain.MatchStage;
 import com.example.footballprediction.domain.Prediction;
+import com.example.footballprediction.domain.TargetSide;
 import com.example.footballprediction.domain.User;
 import com.example.footballprediction.repository.MatchRepository;
 import com.example.footballprediction.repository.PredictionRepository;
@@ -39,6 +41,17 @@ public class PredictionService {
 
     @Transactional
     public Prediction savePrediction(Long userId, Long matchId, Integer homeScore, Integer awayScore) {
+        return savePrediction(userId, matchId, homeScore, awayScore, null);
+    }
+
+    @Transactional
+    public Prediction savePrediction(
+            Long userId,
+            Long matchId,
+            Integer homeScore,
+            Integer awayScore,
+            TargetSide predictedPenaltyWinner
+    ) {
         if (homeScore == null || awayScore == null || homeScore < 0 || awayScore < 0) {
             throw new IllegalArgumentException("Tahmin skorları sıfır veya daha büyük olmalıdır.");
         }
@@ -50,6 +63,13 @@ public class PredictionService {
             throw new IllegalStateException("Tahmin süresi doldu.");
         }
 
+        TargetSide normalizedPenaltyWinner = normalizePredictedPenaltyWinner(
+                match,
+                homeScore,
+                awayScore,
+                predictedPenaltyWinner
+        );
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Kullanıcı bulunamadı."));
 
@@ -60,6 +80,7 @@ public class PredictionService {
         prediction.setMatch(match);
         prediction.setPredictedHomeScore(homeScore);
         prediction.setPredictedAwayScore(awayScore);
+        prediction.setPredictedPenaltyWinner(normalizedPenaltyWinner);
         return predictionRepository.save(prediction);
     }
 
@@ -95,5 +116,24 @@ public class PredictionService {
         if (prediction.getUser() == null || !userId.equals(prediction.getUser().getId())) {
             throw new IllegalStateException("Bu tahmini düzenleme yetkiniz yok.");
         }
+    }
+
+    private TargetSide normalizePredictedPenaltyWinner(
+            Match match,
+            Integer homeScore,
+            Integer awayScore,
+            TargetSide predictedPenaltyWinner
+    ) {
+        if (!isEliminationStage(match) || !homeScore.equals(awayScore)) {
+            return null;
+        }
+        if (predictedPenaltyWinner == null) {
+            throw new IllegalArgumentException("Berabere eleme tahminleri için penaltı galibi seçilmelidir.");
+        }
+        return predictedPenaltyWinner;
+    }
+
+    private boolean isEliminationStage(Match match) {
+        return match != null && match.getStage() != null && match.getStage() != MatchStage.GROUP;
     }
 }

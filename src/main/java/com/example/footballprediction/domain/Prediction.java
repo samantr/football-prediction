@@ -2,6 +2,8 @@ package com.example.footballprediction.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -38,6 +40,10 @@ public class Prediction {
 
     @Column(name = "predicted_away_score", nullable = false)
     private Integer predictedAwayScore;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "predicted_penalty_winner")
+    private TargetSide predictedPenaltyWinner;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -95,6 +101,14 @@ public class Prediction {
 
     public void setPredictedAwayScore(Integer predictedAwayScore) {
         this.predictedAwayScore = predictedAwayScore;
+    }
+
+    public TargetSide getPredictedPenaltyWinner() {
+        return predictedPenaltyWinner;
+    }
+
+    public void setPredictedPenaltyWinner(TargetSide predictedPenaltyWinner) {
+        this.predictedPenaltyWinner = predictedPenaltyWinner;
     }
 
     public LocalDateTime getCreatedAt() {

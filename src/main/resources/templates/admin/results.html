@@ -46,6 +46,8 @@
             </td>
             <td>
                 <span th:if="${match.homeScore != null and match.awayScore != null}" th:text="|${match.homeScore} - ${match.awayScore}|"></span>
+                <span th:if="${match.penaltyWinner != null}" class="muted"
+                      th:text="| Penaltı: ${@uiLabels.matchSideLabel(match, match.penaltyWinner)}|"></span>
                 <span th:unless="${match.homeScore != null and match.awayScore != null}" class="muted">Bekliyor</span>
             </td>
             <td>
@@ -54,6 +56,17 @@
                     <input type="hidden" name="tournamentId" th:value="${selectedTournament.id}">
                     <input class="score-input" type="number" min="0" name="homeScore" th:value="${match.homeScore}" required>
                     <input class="score-input" type="number" min="0" name="awayScore" th:value="${match.awayScore}" required>
+                    <select class="penalty-select" name="penaltyWinner"
+                            th:if="${@uiLabels.eliminationStage(match.stage)}"
+                            th:required="${match.homeScore != null and match.awayScore != null and match.homeScore == match.awayScore}">
+                        <option value="">Penaltı</option>
+                        <option value="HOME"
+                                th:selected="${match.penaltyWinner == T(com.example.footballprediction.domain.TargetSide).HOME}"
+                                th:text="|Penaltı: ${@uiLabels.matchSideLabel(match, T(com.example.footballprediction.domain.TargetSide).HOME)}|"></option>
+                        <option value="AWAY"
+                                th:selected="${match.penaltyWinner == T(com.example.footballprediction.domain.TargetSide).AWAY}"
+                                th:text="|Penaltı: ${@uiLabels.matchSideLabel(match, T(com.example.footballprediction.domain.TargetSide).AWAY)}|"></option>
+                    </select>
                     <button type="submit">Kaydet</button>
                 </form>
             </td>

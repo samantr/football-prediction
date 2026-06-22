@@ -166,6 +166,12 @@ public class FootballDataImportService {
                 match.setHomeScore(fullTime.home());
                 match.setAwayScore(fullTime.away());
             }
+            if (match.getStage() == MatchStage.GROUP
+                    || (match.getHomeScore() != null
+                    && match.getAwayScore() != null
+                    && !match.getHomeScore().equals(match.getAwayScore()))) {
+                match.setPenaltyWinner(null);
+            }
 
             matchRepository.save(match);
             if (created) {

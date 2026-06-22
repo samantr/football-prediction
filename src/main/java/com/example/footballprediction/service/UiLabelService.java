@@ -1,9 +1,11 @@
 package com.example.footballprediction.service;
 
 import com.example.footballprediction.domain.BracketSourceType;
+import com.example.footballprediction.domain.Match;
 import com.example.footballprediction.domain.MatchStage;
 import com.example.footballprediction.domain.MatchStatus;
 import com.example.footballprediction.domain.TargetSide;
+import com.example.footballprediction.domain.Team;
 import org.springframework.stereotype.Component;
 
 @Component("uiLabels")
@@ -44,6 +46,19 @@ public class UiLabelService {
         };
     }
 
+    public boolean eliminationStage(MatchStage stage) {
+        return stage != null && stage != MatchStage.GROUP;
+    }
+
+    public String matchSideLabel(Match match, TargetSide side) {
+        if (match == null || side == null) {
+            return "";
+        }
+        return side == TargetSide.HOME
+                ? teamLabel(match.getHomeTeam(), match.getPlaceholderHome(), "Ev sahibi")
+                : teamLabel(match.getAwayTeam(), match.getPlaceholderAway(), "Deplasman");
+    }
+
     public String bracketSourceType(BracketSourceType sourceType) {
         if (sourceType == null) {
             return "";
@@ -78,5 +93,15 @@ public class UiLabelService {
             case WRONG -> "Yanlış";
             case PENDING -> "Bekliyor";
         };
+    }
+
+    private String teamLabel(Team team, String placeholder, String fallback) {
+        if (team != null) {
+            return team.getName();
+        }
+        if (placeholder != null && !placeholder.isBlank()) {
+            return placeholder;
+        }
+        return fallback;
     }
 }

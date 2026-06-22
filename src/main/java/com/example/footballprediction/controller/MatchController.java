@@ -2,6 +2,7 @@ package com.example.footballprediction.controller;
 
 import com.example.footballprediction.domain.Match;
 import com.example.footballprediction.domain.Prediction;
+import com.example.footballprediction.domain.TargetSide;
 import com.example.footballprediction.domain.Tournament;
 import com.example.footballprediction.domain.User;
 import com.example.footballprediction.repository.MatchRepository;
@@ -10,6 +11,8 @@ import com.example.footballprediction.service.PredictionService;
 import com.example.footballprediction.service.ScoringService;
 import com.example.footballprediction.service.TournamentService;
 import com.example.footballprediction.service.UserService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -80,14 +83,21 @@ public class MatchController {
     public String savePrediction(
             @PathVariable Long matchId,
             @RequestParam(required = false) Long tournamentId,
-            @RequestParam Integer predictedHomeScore,
-            @RequestParam Integer predictedAwayScore,
+            @RequestParam(required = false) String predictedHomeScore,
+            @RequestParam(required = false) String predictedAwayScore,
+            @RequestParam(required = false) String predictedPenaltyWinner,
             Authentication authentication,
             RedirectAttributes redirectAttributes
     ) {
         try {
             User user = userService.getByEmail(authentication.getName());
-            predictionService.savePrediction(user.getId(), matchId, predictedHomeScore, predictedAwayScore);
+            predictionService.savePrediction(
+                    user.getId(),
+                    matchId,
+                    parseScore(predictedHomeScore),
+                    parseScore(predictedAwayScore),
+                    parseTargetSide(predictedPenaltyWinner)
+            );
             redirectAttributes.addFlashAttribute("success", "Tahmin kaydedildi.");
         } catch (IllegalArgumentException | IllegalStateException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
@@ -95,7 +105,86 @@ public class MatchController {
         return redirectToMatches(tournamentId);
     }
 
+    @PostMapping("/matches/{matchId}/predictions/ajax")
+    public ResponseEntity<PredictionSaveResponse> savePredictionAjax(
+            @PathVariable Long matchId,
+            @RequestParam(required = false) String predictedHomeScore,
+            @RequestParam(required = false) String predictedAwayScore,
+            @RequestParam(required = false) String predictedPenaltyWinner,
+            Authentication authentication
+    ) {
+        try {
+            User user = userService.getByEmail(authentication.getName());
+            Prediction prediction = predictionService.savePrediction(
+                    user.getId(),
+                    matchId,
+                    parseScore(predictedHomeScore),
+                    parseScore(predictedAwayScore),
+                    parseTargetSide(predictedPenaltyWinner)
+            );
+            return ResponseEntity.ok(PredictionSaveResponse.success(
+                    "Kaydedildi",
+                    prediction.getPredictedHomeScore(),
+                    prediction.getPredictedAwayScore(),
+                    prediction.getPredictedPenaltyWinner()
+            ));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(PredictionSaveResponse.failure(ex.getMessage()));
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(PredictionSaveResponse.failure(ex.getMessage()));
+        }
+    }
+
     private String redirectToMatches(Long tournamentId) {
         return tournamentId == null ? "redirect:/matches" : "redirect:/matches?tournamentId=" + tournamentId;
+    }
+
+    private Integer parseScore(String score) {
+        if (score == null || score.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(score.trim());
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Tahmin skorları geçerli sayı olmalıdır.");
+        }
+    }
+
+    private TargetSide parseTargetSide(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return TargetSide.valueOf(value.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Penaltı galibi geçerli olmalıdır.");
+        }
+    }
+
+    public record PredictionSaveResponse(
+            boolean success,
+            String message,
+            Integer predictedHomeScore,
+            Integer predictedAwayScore,
+            TargetSide predictedPenaltyWinner
+    ) {
+        static PredictionSaveResponse success(
+                String message,
+                Integer predictedHomeScore,
+                Integer predictedAwayScore,
+                TargetSide predictedPenaltyWinner
+        ) {
+            return new PredictionSaveResponse(
+                    true,
+                    message,
+                    predictedHomeScore,
+                    predictedAwayScore,
+                    predictedPenaltyWinner
+            );
+        }
+
+        static PredictionSaveResponse failure(String message) {
+            return new PredictionSaveResponse(false, message, null, null, null);
+        }
     }
 }

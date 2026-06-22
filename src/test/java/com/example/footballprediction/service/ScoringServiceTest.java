@@ -5,6 +5,7 @@ import com.example.footballprediction.domain.MatchStage;
 import com.example.footballprediction.domain.MatchStatus;
 import com.example.footballprediction.domain.Prediction;
 import com.example.footballprediction.domain.Role;
+import com.example.footballprediction.domain.TargetSide;
 import com.example.footballprediction.domain.User;
 import com.example.footballprediction.repository.PredictionRepository;
 import com.example.footballprediction.repository.UserRepository;
@@ -72,6 +73,101 @@ class ScoringServiceTest {
     }
 
     @Test
+    void eliminationWrongWinnerReturnsZeroPoints() {
+        Prediction prediction = prediction(1, 2, 2, 1, MatchStage.FINAL, MatchStatus.COMPLETED);
+
+        assertThat(scoringService.calculateScore(prediction)).isZero();
+        assertThat(scoringService.classify(prediction)).isEqualTo(PredictionResultClassification.WRONG);
+    }
+
+    @Test
+    void eliminationTiedResultAwardsTieAndPenaltyWinnerPoints() {
+        Prediction correctTieWrongPenalty = prediction(
+                2,
+                2,
+                1,
+                1,
+                MatchStage.FINAL,
+                MatchStatus.COMPLETED,
+                TargetSide.HOME,
+                TargetSide.AWAY
+        );
+        Prediction correctTieCorrectPenalty = prediction(
+                2,
+                2,
+                1,
+                1,
+                MatchStage.FINAL,
+                MatchStatus.COMPLETED,
+                TargetSide.HOME,
+                TargetSide.HOME
+        );
+
+        assertThat(scoringService.calculateScore(correctTieWrongPenalty)).isEqualTo(2);
+        assertThat(scoringService.classify(correctTieWrongPenalty)).isEqualTo(PredictionResultClassification.CORRECT_OUTCOME);
+        assertThat(scoringService.calculateScore(correctTieCorrectPenalty)).isEqualTo(4);
+        assertThat(scoringService.classify(correctTieCorrectPenalty)).isEqualTo(PredictionResultClassification.CORRECT_OUTCOME);
+    }
+
+    @Test
+    void eliminationExactTieScoreCanEarnPenaltyBonus() {
+        Prediction exactTieWrongPenalty = prediction(
+                1,
+                1,
+                1,
+                1,
+                MatchStage.FINAL,
+                MatchStatus.COMPLETED,
+                TargetSide.HOME,
+                TargetSide.AWAY
+        );
+        Prediction exactTieCorrectPenalty = prediction(
+                1,
+                1,
+                1,
+                1,
+                MatchStage.FINAL,
+                MatchStatus.COMPLETED,
+                TargetSide.HOME,
+                TargetSide.HOME
+        );
+
+        assertThat(scoringService.calculateScore(exactTieWrongPenalty)).isEqualTo(4);
+        assertThat(scoringService.classify(exactTieWrongPenalty)).isEqualTo(PredictionResultClassification.EXACT_SCORE);
+        assertThat(scoringService.calculateScore(exactTieCorrectPenalty)).isEqualTo(6);
+        assertThat(scoringService.classify(exactTieCorrectPenalty)).isEqualTo(PredictionResultClassification.EXACT_SCORE);
+    }
+
+    @Test
+    void eliminationNonTiePredictionCanMatchPenaltyWinnerWhenActualScoreIsTied() {
+        Prediction predictedFinalWinner = prediction(
+                2,
+                1,
+                1,
+                1,
+                MatchStage.FINAL,
+                MatchStatus.COMPLETED,
+                TargetSide.HOME,
+                null
+        );
+        Prediction predictedWrongFinalWinner = prediction(
+                1,
+                2,
+                1,
+                1,
+                MatchStage.FINAL,
+                MatchStatus.COMPLETED,
+                TargetSide.HOME,
+                null
+        );
+
+        assertThat(scoringService.calculateScore(predictedFinalWinner)).isEqualTo(2);
+        assertThat(scoringService.classify(predictedFinalWinner)).isEqualTo(PredictionResultClassification.CORRECT_OUTCOME);
+        assertThat(scoringService.calculateScore(predictedWrongFinalWinner)).isZero();
+        assertThat(scoringService.classify(predictedWrongFinalWinner)).isEqualTo(PredictionResultClassification.WRONG);
+    }
+
+    @Test
     void pendingMatchReturnsZeroPointsAndPendingClassification() {
         Prediction prediction = prediction(2, 1, null, null, MatchStage.GROUP, MatchStatus.SCHEDULED);
 
@@ -110,16 +206,31 @@ class ScoringServiceTest {
             MatchStage stage,
             MatchStatus status
     ) {
+        return prediction(predictedHome, predictedAway, actualHome, actualAway, stage, status, null, null);
+    }
+
+    private Prediction prediction(
+            int predictedHome,
+            int predictedAway,
+            Integer actualHome,
+            Integer actualAway,
+            MatchStage stage,
+            MatchStatus status,
+            TargetSide penaltyWinner,
+            TargetSide predictedPenaltyWinner
+    ) {
         Match match = new Match();
         match.setStage(stage);
         match.setStatus(status);
         match.setHomeScore(actualHome);
         match.setAwayScore(actualAway);
+        match.setPenaltyWinner(penaltyWinner);
 
         Prediction prediction = new Prediction();
         prediction.setMatch(match);
         prediction.setPredictedHomeScore(predictedHome);
         prediction.setPredictedAwayScore(predictedAway);
+        prediction.setPredictedPenaltyWinner(predictedPenaltyWinner);
         return prediction;
     }
 

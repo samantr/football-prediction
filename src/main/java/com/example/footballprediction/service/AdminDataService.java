@@ -97,6 +97,11 @@ public class AdminDataService {
 
     @Transactional
     public Match enterResult(Long matchId, Integer homeScore, Integer awayScore) {
+        return enterResult(matchId, homeScore, awayScore, null);
+    }
+
+    @Transactional
+    public Match enterResult(Long matchId, Integer homeScore, Integer awayScore, TargetSide penaltyWinner) {
         if (homeScore == null || awayScore == null || homeScore < 0 || awayScore < 0) {
             throw new IllegalArgumentException("Skorlar sıfır veya daha büyük olmalıdır.");
         }
@@ -105,6 +110,7 @@ public class AdminDataService {
                 .orElseThrow(() -> new IllegalArgumentException("Maç bulunamadı."));
         match.setHomeScore(homeScore);
         match.setAwayScore(awayScore);
+        match.setPenaltyWinner(normalizePenaltyWinner(match, homeScore, awayScore, penaltyWinner));
         match.setStatus(MatchStatus.COMPLETED);
         return matchRepository.save(match);
     }
@@ -184,6 +190,20 @@ public class AdminDataService {
         Long tournamentId = rule.getTournament().getId();
         bracketRuleRepository.delete(rule);
         return tournamentId;
+    }
+
+    private TargetSide normalizePenaltyWinner(Match match, Integer homeScore, Integer awayScore, TargetSide penaltyWinner) {
+        if (!isEliminationStage(match) || !homeScore.equals(awayScore)) {
+            return null;
+        }
+        if (penaltyWinner == null) {
+            throw new IllegalArgumentException("Berabere eleme maçları için penaltı galibi seçilmelidir.");
+        }
+        return penaltyWinner;
+    }
+
+    private boolean isEliminationStage(Match match) {
+        return match != null && match.getStage() != null && match.getStage() != MatchStage.GROUP;
     }
 
     private Tournament getTournament(Long tournamentId) {

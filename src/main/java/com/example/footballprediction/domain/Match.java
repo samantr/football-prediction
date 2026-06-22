@@ -63,6 +63,10 @@ public class Match {
     private Integer awayScore;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "penalty_winner")
+    private TargetSide penaltyWinner;
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MatchStatus status = MatchStatus.SCHEDULED;
 
@@ -166,6 +170,14 @@ public class Match {
 
     public void setAwayScore(Integer awayScore) {
         this.awayScore = awayScore;
+    }
+
+    public TargetSide getPenaltyWinner() {
+        return penaltyWinner;
+    }
+
+    public void setPenaltyWinner(TargetSide penaltyWinner) {
+        this.penaltyWinner = penaltyWinner;
     }
 
     public MatchStatus getStatus() {

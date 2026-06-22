@@ -284,10 +284,11 @@ public class AdminController {
             @RequestParam(required = false) Long tournamentId,
             @RequestParam Integer homeScore,
             @RequestParam Integer awayScore,
+            @RequestParam(required = false) String penaltyWinner,
             RedirectAttributes redirectAttributes
     ) {
         try {
-            adminDataService.enterResult(matchId, homeScore, awayScore);
+            adminDataService.enterResult(matchId, homeScore, awayScore, parseTargetSide(penaltyWinner));
             redirectAttributes.addFlashAttribute("success", "Sonuç kaydedildi.");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
@@ -409,6 +410,17 @@ public class AdminController {
         return tournamentId == null
                 ? "redirect:/admin/" + page
                 : "redirect:/admin/" + page + "?tournamentId=" + tournamentId;
+    }
+
+    private TargetSide parseTargetSide(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return TargetSide.valueOf(value.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Penaltı galibi geçerli olmalıdır.");
+        }
     }
 
     private LocalDateTime parseDateTime(String value) {

@@ -5,6 +5,7 @@ import com.example.footballprediction.domain.MatchStage;
 import com.example.footballprediction.domain.MatchStatus;
 import com.example.footballprediction.domain.Prediction;
 import com.example.footballprediction.domain.Role;
+import com.example.footballprediction.domain.TargetSide;
 import com.example.footballprediction.domain.User;
 import com.example.footballprediction.repository.PredictionRepository;
 import com.example.footballprediction.repository.UserRepository;
@@ -34,7 +35,8 @@ public class ScoringService {
     }
 
     public int calculateScore(Prediction prediction) {
-        return pointsFor(prediction, classify(prediction));
+        PredictionResultClassification classification = classify(prediction);
+        return scoreFor(prediction, classification);
     }
 
     public PredictionResultClassification classify(Prediction prediction) {
@@ -52,6 +54,10 @@ public class ScoringService {
                 && prediction.getPredictedAwayScore().equals(prediction.getMatch().getAwayScore());
         if (exactScore) {
             return PredictionResultClassification.EXACT_SCORE;
+        }
+
+        if (!isGroupStage(prediction.getMatch())) {
+            return classifyElimination(prediction);
         }
 
         int predictedOutcome = Integer.compare(prediction.getPredictedHomeScore(), prediction.getPredictedAwayScore());
@@ -80,7 +86,7 @@ public class ScoringService {
             }
 
             PredictionResultClassification classification = classify(prediction);
-            int points = pointsFor(prediction, classification);
+            int points = scoreFor(prediction, classification);
             score.totalScore += points;
             score.predictionsCount++;
             if (classification == PredictionResultClassification.EXACT_SCORE) {
@@ -132,9 +138,79 @@ public class ScoringService {
                 prediction.getUser(),
                 prediction.getMatch(),
                 prediction,
-                pointsFor(prediction, classification),
+                scoreFor(prediction, classification),
                 classification
         );
+    }
+
+    private int scoreFor(Prediction prediction, PredictionResultClassification classification) {
+        if (classification == PredictionResultClassification.PENDING || isGroupStage(prediction.getMatch())) {
+            return pointsFor(prediction, classification);
+        }
+        return calculateEliminationScore(prediction, classification);
+    }
+
+    private PredictionResultClassification classifyElimination(Prediction prediction) {
+        Match match = prediction.getMatch();
+        boolean actualTie = match.getHomeScore().equals(match.getAwayScore());
+        boolean predictedTie = prediction.getPredictedHomeScore().equals(prediction.getPredictedAwayScore());
+
+        if (!actualTie) {
+            TargetSide actualWinner = winnerFromScore(match.getHomeScore(), match.getAwayScore());
+            TargetSide predictedWinner = predictedTie
+                    ? null
+                    : winnerFromScore(prediction.getPredictedHomeScore(), prediction.getPredictedAwayScore());
+            return actualWinner == predictedWinner
+                    ? PredictionResultClassification.CORRECT_OUTCOME
+                    : PredictionResultClassification.WRONG;
+        }
+
+        if (predictedTie) {
+            return PredictionResultClassification.CORRECT_OUTCOME;
+        }
+
+        TargetSide predictedWinner = winnerFromScore(
+                prediction.getPredictedHomeScore(),
+                prediction.getPredictedAwayScore()
+        );
+        return match.getPenaltyWinner() != null && match.getPenaltyWinner() == predictedWinner
+                ? PredictionResultClassification.CORRECT_OUTCOME
+                : PredictionResultClassification.WRONG;
+    }
+
+    private int calculateEliminationScore(Prediction prediction, PredictionResultClassification classification) {
+        return switch (classification) {
+            case EXACT_SCORE -> ELIMINATION_EXACT_SCORE_POINTS + penaltyWinnerBonus(prediction);
+            case CORRECT_OUTCOME -> {
+                if (actualScoreIsTied(prediction) && predictedScoreIsTied(prediction)) {
+                    yield ELIMINATION_CORRECT_OUTCOME_POINTS + penaltyWinnerBonus(prediction);
+                }
+                yield ELIMINATION_CORRECT_OUTCOME_POINTS;
+            }
+            case WRONG, PENDING -> 0;
+        };
+    }
+
+    private int penaltyWinnerBonus(Prediction prediction) {
+        Match match = prediction.getMatch();
+        if (!actualScoreIsTied(prediction) || match.getPenaltyWinner() == null) {
+            return 0;
+        }
+        return match.getPenaltyWinner() == prediction.getPredictedPenaltyWinner()
+                ? ELIMINATION_CORRECT_OUTCOME_POINTS
+                : 0;
+    }
+
+    private boolean actualScoreIsTied(Prediction prediction) {
+        return prediction.getMatch().getHomeScore().equals(prediction.getMatch().getAwayScore());
+    }
+
+    private boolean predictedScoreIsTied(Prediction prediction) {
+        return prediction.getPredictedHomeScore().equals(prediction.getPredictedAwayScore());
+    }
+
+    private TargetSide winnerFromScore(Integer homeScore, Integer awayScore) {
+        return homeScore > awayScore ? TargetSide.HOME : TargetSide.AWAY;
     }
 
     private int pointsFor(Prediction prediction, PredictionResultClassification classification) {

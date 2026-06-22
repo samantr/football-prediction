@@ -66,6 +66,8 @@
                 </td>
                 <td>
                     <span th:if="${match.homeScore != null and match.awayScore != null}" th:text="|${match.homeScore} - ${match.awayScore}|"></span>
+                    <span th:if="${match.penaltyWinner != null}" class="muted"
+                          th:text="| Penaltı: ${@uiLabels.matchSideLabel(match, match.penaltyWinner)}|"></span>
                     <span th:unless="${match.homeScore != null and match.awayScore != null}" class="muted">Bekliyor</span>
                 </td>
             </tr>
@@ -124,9 +126,15 @@
                     <span> - </span>
                     <span th:text="${row.match.awayTeam != null ? row.match.awayTeam.name : (row.match.placeholderAway != null ? row.match.placeholderAway : 'Belirlenecek')}"></span>
                 </td>
-                <td th:text="|${row.prediction.predictedHomeScore} - ${row.prediction.predictedAwayScore}|"></td>
+                <td>
+                    <span th:text="|${row.prediction.predictedHomeScore} - ${row.prediction.predictedAwayScore}|"></span>
+                    <span th:if="${row.prediction.predictedPenaltyWinner != null}" class="muted"
+                          th:text="| Penaltı: ${@uiLabels.matchSideLabel(row.match, row.prediction.predictedPenaltyWinner)}|"></span>
+                </td>
                 <td>
                     <span th:if="${row.match.homeScore != null and row.match.awayScore != null}" th:text="|${row.match.homeScore} - ${row.match.awayScore}|"></span>
+                    <span th:if="${row.match.penaltyWinner != null}" class="muted"
+                          th:text="| Penaltı: ${@uiLabels.matchSideLabel(row.match, row.match.penaltyWinner)}|"></span>
                     <span th:unless="${row.match.homeScore != null and row.match.awayScore != null}" class="muted">Bekliyor</span>
                 </td>
                 <td th:text="${row.score}"></td>

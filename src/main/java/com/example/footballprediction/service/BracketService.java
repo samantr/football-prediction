@@ -168,6 +168,14 @@ public class BracketService {
             return Resolution.review("Kaynak maç " + sourceMatchNo + " için tüm sonuçlar girilmemiş.");
         }
 
+        if (sourceMatch.getHomeScore().equals(sourceMatch.getAwayScore()) && sourceMatch.getPenaltyWinner() != null) {
+            boolean homeWonOnPenalties = sourceMatch.getPenaltyWinner() == TargetSide.HOME;
+            if (rule.getSourceType() == BracketSourceType.MATCH_WINNER) {
+                return Resolution.resolved(homeWonOnPenalties ? sourceMatch.getHomeTeam() : sourceMatch.getAwayTeam());
+            }
+            return Resolution.resolved(homeWonOnPenalties ? sourceMatch.getAwayTeam() : sourceMatch.getHomeTeam());
+        }
+
         if (sourceMatch.getHomeScore().equals(sourceMatch.getAwayScore())) {
             return Resolution.review("Kaynak maç " + sourceMatchNo + " berabere bitti.");
         }
