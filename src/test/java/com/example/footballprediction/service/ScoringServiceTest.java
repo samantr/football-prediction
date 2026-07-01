@@ -139,7 +139,7 @@ class ScoringServiceTest {
     }
 
     @Test
-    void eliminationNonTiePredictionCanMatchPenaltyWinnerWhenActualScoreIsTied() {
+    void eliminationNonTiePredictionCannotMatchPenaltyWinnerWhenActualScoreIsTied() {
         Prediction predictedFinalWinner = prediction(
                 2,
                 1,
@@ -148,7 +148,7 @@ class ScoringServiceTest {
                 MatchStage.FINAL,
                 MatchStatus.COMPLETED,
                 TargetSide.HOME,
-                null
+                TargetSide.HOME
         );
         Prediction predictedWrongFinalWinner = prediction(
                 1,
@@ -161,8 +161,8 @@ class ScoringServiceTest {
                 null
         );
 
-        assertThat(scoringService.calculateScore(predictedFinalWinner)).isEqualTo(2);
-        assertThat(scoringService.classify(predictedFinalWinner)).isEqualTo(PredictionResultClassification.CORRECT_OUTCOME);
+        assertThat(scoringService.calculateScore(predictedFinalWinner)).isZero();
+        assertThat(scoringService.classify(predictedFinalWinner)).isEqualTo(PredictionResultClassification.WRONG);
         assertThat(scoringService.calculateScore(predictedWrongFinalWinner)).isZero();
         assertThat(scoringService.classify(predictedWrongFinalWinner)).isEqualTo(PredictionResultClassification.WRONG);
     }

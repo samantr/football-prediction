@@ -52,9 +52,16 @@
 
         const predictedHomeScore = form.elements.predictedHomeScore.value;
         const predictedAwayScore = form.elements.predictedAwayScore.value;
-        penaltyWinner.required = predictedHomeScore !== ""
+        const scoresEditable = !form.elements.predictedHomeScore.disabled && !form.elements.predictedAwayScore.disabled;
+        const predictedTie = predictedHomeScore !== ""
             && predictedAwayScore !== ""
             && predictedHomeScore === predictedAwayScore;
+
+        penaltyWinner.required = scoresEditable && predictedTie;
+        penaltyWinner.disabled = !scoresEditable || !predictedTie;
+        if (!predictedTie) {
+            penaltyWinner.value = "";
+        }
     }
 
     async function readJsonOrFallback(response) {

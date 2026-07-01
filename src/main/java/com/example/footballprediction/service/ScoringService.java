@@ -168,14 +168,7 @@ public class ScoringService {
         if (predictedTie) {
             return PredictionResultClassification.CORRECT_OUTCOME;
         }
-
-        TargetSide predictedWinner = winnerFromScore(
-                prediction.getPredictedHomeScore(),
-                prediction.getPredictedAwayScore()
-        );
-        return match.getPenaltyWinner() != null && match.getPenaltyWinner() == predictedWinner
-                ? PredictionResultClassification.CORRECT_OUTCOME
-                : PredictionResultClassification.WRONG;
+        return PredictionResultClassification.WRONG;
     }
 
     private int calculateEliminationScore(Prediction prediction, PredictionResultClassification classification) {

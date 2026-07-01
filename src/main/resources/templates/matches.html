@@ -85,7 +85,7 @@
                            th:disabled="${!editable}" required>
                     <select class="penalty-select" name="predictedPenaltyWinner"
                             th:if="${@uiLabels.eliminationStage(match.stage)}"
-                            th:disabled="${!editable}"
+                            th:disabled="${!editable or prediction == null or prediction.predictedHomeScore == null or prediction.predictedAwayScore == null or prediction.predictedHomeScore != prediction.predictedAwayScore}"
                             data-penalty-winner>
                         <option value="">Penaltı</option>
                         <option value="HOME"
